@@ -8,7 +8,7 @@ import * as Chroma from 'chroma-js';
 import * as Cannon from 'cannon';
 
 enum Texture {
-    BRICK = "./../../../assets/texture/Bricks.jpg",
+    BRICK = "src/assets/texture/Bricks.jpg",
     EARTH = "./../../../assets/texture/earthmap.png",
     GAS_BRIGHT = "./../../../assets/texture/Gaseous_Bright.jpg",
     GAS_DARK = "./../../../assets/texture/Gaseous_Dark.png",
