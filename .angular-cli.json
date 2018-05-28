@@ -19,9 +19,13 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
-        "styles.css"
+        "./../styles/styles.css",
+        "./../styles/w3.4.10.css",
+        "./../styles/css3d-threejs.component.css"
       ],
-      "scripts": [],
+      "scripts": [
+
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",

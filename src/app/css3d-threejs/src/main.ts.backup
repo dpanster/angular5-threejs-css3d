@@ -1,0 +1,794 @@
+// instaled with npm
+import * as THREE from 'three';
+import * as TrackballControls from 'three-trackballcontrols';
+import * as CSS3DRenderer from 'three-css3drenderer';
+import * as TWEEN from 'tween.js';
+import * as Perlin from 'perlin-noise';
+import * as Chroma from 'chroma-js';
+import * as Cannon from 'cannon';
+
+export class MainCSS3d {
+
+    // private main parts
+    private scene: THREE.Scene;
+    private sceneCSS: THREE.Scene;
+    private cannonWorld: Cannon.World;
+
+    private renderer: THREE.WebGLRenderer;
+    private rendererCSS: THREE.CSS3DRenderer;
+    private camera: THREE.PerspectiveCamera;
+    private controls: TrackballControls;
+
+    // screen
+    private aspRatio: number;
+    private scrSize: number;
+
+    // dom elements
+    private htmlDivCanvas: HTMLDivElement;
+
+    // objects
+    private torus: THREE.Mesh;
+    private sphereSatRotational: THREE.Mesh;
+    private pivotPoint: THREE.Object3D;
+    private pivotPointPmSystem: THREE.Object3D;
+    private pmSystem: THREE.ParticleSystem;
+    private terrain: THREE.Mesh;
+    private sceneBalls: Array<THREE.Mesh> = [];
+
+    // tween
+    private tweenSphereScaleZ: TWEEN.Tween;
+    private tweenPivotPartSysRotY: TWEEN.Tween;
+    
+    //material
+    private materialBrick: any;   // dynamic
+    private terrainMat: THREE.MeshPhongMaterial;
+
+    // light
+    private directionalLight: THREE.SpotLight;
+
+    // cannon physics
+    //private shapeBody: Cannon.Body;
+    //private groundBody: Cannon.Body;
+    //private groundShape: Cannon.Heightfield;
+    private timestep:number = 1/60;
+    private bPhysicsOn:boolean = false;
+    private cannonBalls: Array<Cannon.Body> = [];
+
+    constructor(can: HTMLDivElement, screenSizePercent: number) {
+        // set
+        this.htmlDivCanvas = can;
+        this.aspRatio = (window.innerWidth * screenSizePercent) / (window.innerHeight * screenSizePercent);
+        this.scrSize = screenSizePercent;
+
+        // for all scene/renderes
+        this.initiateCamera();
+
+        /////// physics
+        this.initPhysicWorld(); 
+
+        /////// webGl 
+        this.createRenderer();
+        this.initiateGeometies();
+        this.initiateLight();
+        this.initiateParticles();
+        this.initiateTerrain();
+        this.addHelpers();
+        this.renderer.render(this.scene, this.camera);
+
+        ////////// css3d
+        this.createCSSRenderer();
+        this.initiateCSSObjects();
+        this.rendererCSS.render(this.sceneCSS, this.camera);
+
+        // controls
+        this.initTrackballControls();
+
+        // tween
+        this.initTween();
+   
+        // life cycle
+        this.animate();
+
+    }
+
+    /**
+     * Rendering (initial, loop)
+     * 
+     * @private
+     * @memberof MainCSS3d
+     */
+    private createRenderer() {
+        this.scene = new THREE.Scene();
+
+        this.renderer = new THREE.WebGLRenderer({
+            //canvas: can,
+            antialias: true,
+            alpha: true
+        });
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setClearColor(0x000000, 1);
+        this.renderer.setSize(window.innerWidth * this.scrSize, window.innerHeight * this.scrSize);
+
+        // shadow
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;   // to antialias the shadow
+
+        this.renderer.domElement.style.position = 'absolute'; // required
+        //this.renderer.domElement.style.top = "40px";
+        this.renderer.domElement.style.zIndex = "1"; // required
+
+        this.htmlDivCanvas.appendChild(this.renderer.domElement);
+    }
+
+
+    private initiateCamera() {
+
+        this.camera = new THREE.PerspectiveCamera(
+            70,
+            this.aspRatio,
+            1,
+            10000
+        );
+        this.camera.position.set(-200, 200, 800);
+
+    }
+
+    private initiateLight() {
+        // light
+        var light = new THREE.AmbientLight(0xAAAAAA); // soft white light
+        this.scene.add(light);
+
+        this.directionalLight = new THREE.SpotLight(0xffffff, 0.5);
+        this.directionalLight.position.set(0, 400, 0);
+        this.directionalLight.target.position.set(10, 10, 0);
+        //this.directionalLight.target = this.sphereSatRotational;
+        this.directionalLight.castShadow = true;
+        this.scene.add(this.directionalLight);
+
+    }
+
+    private initiateGeometies() {
+        // geometry
+        // main big torus
+        var geometry = new THREE.TorusGeometry(
+            200, // radius
+            30, // tube
+            16, // radial segments
+            100 // tubular segments
+        );
+
+        // Material
+        let texture;
+        texture = new THREE.TextureLoader().load("./../../../assets/texture/brick_stone_wall_0078_01.jpg");
+        texture.minFilter = THREE.LinearFilter;
+        this.materialBrick = new THREE.MeshPhongMaterial({ map: texture });
+        this.torus = new THREE.Mesh(geometry, this.materialBrick);
+        this.torus.rotateX(THREE.Math.degToRad(90)); // 90 degree
+        this.torus.receiveShadow = true;
+        this.torus.castShadow = true;
+
+        // add a pivot point
+        this.pivotPoint = new THREE.Object3D();
+
+        //// rotation satellite top of torus
+        var sphereGeom = new THREE.SphereGeometry(20, 32, 32);
+
+        this.sphereSatRotational = new THREE.Mesh(sphereGeom, this.materialBrick);
+        // 200 = R of torus, 15 = half tube torus, 10 = half diameter sphere 
+        this.sphereSatRotational.position.set(200, 15 + 34, 0);
+
+        this.sphereSatRotational.castShadow = true;
+
+
+        // make the pivot points the sphere's parent
+        this.pivotPoint.add(this.sphereSatRotational);
+
+
+            // var mass = 5;
+            // var sphereShape = new Cannon.Sphere(20);
+            // this.shapeBody = new Cannon.Body({mass: mass}); // Define a rigid body using the shape and other physical properties needed
+            // this.shapeBody.addShape(sphereShape);
+            // this.shapeBody.position.set(200, 15 + 34, 0);
+            // //this.shapeBody.quaternion.set(0,1,0,1);
+            // this.shapeBody.angularVelocity.set(0,5,0);               
+            // this.cannonWorld.addBody(this.shapeBody); // Add the body to the world.
+
+
+
+        // add to scene
+        this.scene.add(this.torus);
+        this.scene.add(this.pivotPoint);
+       
+    }
+
+    private addHelpers() {
+        //axes
+        var axes = new THREE.AxesHelper(100);
+        this.scene.add(axes);
+
+        // 90° grid
+        var size = 100;
+        var divisions = 10;
+        var gridHelperX = new THREE.GridHelper(size, divisions);
+        gridHelperX.rotateX(THREE.Math.degToRad(90));
+        this.scene.add(gridHelperX);
+
+        var gridHelperY = new THREE.GridHelper(size, divisions);
+        gridHelperY.rotateX(THREE.Math.degToRad(180));
+        this.scene.add(gridHelperY);
+    }
+
+    private initTrackballControls() {
+        // track control
+        this.controls = new TrackballControls(this.camera, this.rendererCSS.domElement);
+        this.controls.rotateSpeed = 2;
+        this.controls.minDistance = 5;
+        this.controls.maxDistance = 2000;
+    }
+
+    private initTween() {
+
+        // tween up particle system at init
+        let component: MainCSS3d = this;
+        this.tweenPivotPartSysRotY = new TWEEN.Tween({ yVel: 0.0 })
+        .to({ yVel: 0.005 }, 3000)
+        .onUpdate(function () {
+            component.pivotPointPmSystem.userData.rotation_yVel = this.yVel;
+        })
+        .start();
+    }
+
+    private animate() {
+
+        let component: MainCSS3d = this;
+        let setImpls = false; 
+
+        (function render(time) {
+            
+            requestAnimationFrame(render);
+
+            // objects
+            component.pivotPointPmSystem.rotation.y -= component.pivotPointPmSystem.userData.rotation_yVel;
+
+            // renderer
+            component.rendererCSS.render(component.sceneCSS, component.camera);
+            component.renderer.render(component.scene, component.camera);
+
+            // trackball controls
+            component.controls.update();
+
+            /// tween
+            TWEEN.update(time);
+            component.pivotPoint.rotation.y += 0.02;
+            component.sphereSatRotational.rotation.y += 0.06;
+            
+            // cannon physics                   
+            if(component.bPhysicsOn === false){
+
+            }else{
+
+                            component.cannonWorld.step(1/60);    
+
+                // component.sphereSatRotational.quaternion.set(
+                //     component.shapeBody.quaternion.x,
+                //     component.shapeBody.quaternion.y,
+                //     component.shapeBody.quaternion.z,
+                //     component.shapeBody.quaternion.w
+                // );
+
+                // component.sphereSatRotational.position.set(
+                //     component.shapeBody.position.x,
+                //     component.shapeBody.position.y,
+                //     component.shapeBody.position.z
+                // );   
+                
+
+                
+                // // TEST
+                for(let i=0;i<component.cannonBalls.length;i++){
+                    component.sceneBalls[i].position.x = component.cannonBalls[i].position.x;
+                    component.sceneBalls[i].position.y = component.cannonBalls[i].position.y;
+                    component.sceneBalls[i].position.z = component.cannonBalls[i].position.z;
+                }
+
+            }
+        }());
+    }
+
+
+    //////////////////////// CSS
+    private initiateCSSObjects() {
+
+        let component: MainCSS3d = this;
+        let menuPosX = -250;
+        let liEmoj: string[] = ["🙏", "👽", "😈", "👻", "😮"];
+        let liTxt: string[] = ["Physics!","Torus Material", "Light", "Shadow", "Satelite Scale X (tween)"];
+
+        for (let i = 1; i <= 5; i++) {
+            var element = document.createElement('div');
+            element.className = 'element';
+            element.id = 'elem_' + i;
+            element.addEventListener('click', function (event) {
+
+                //console.log("clicked element" + JSON.stringify(this.id));
+                switch (this.id) {
+                    case "elem_1":  //Physics
+                        console.log("ok");
+                        if (component.bPhysicsOn === false) {
+                            document.getElementById(this.id).className = "elementClick";
+
+                            // Add an impulse to the center
+                            console.log("x: " + component.sphereSatRotational.position.x + ", z:" + component.sphereSatRotational.position.z);
+                            
+                            // var currentPoint = new Cannon.Vec3(
+                            //     component.sphereSatRotational.position.x+1,
+                            //     component.sphereSatRotational.position.y,
+                            //     component.sphereSatRotational.position.z);
+
+                            // var impulse = new Cannon.Vec3(0,0,-1000);
+                            // component.shapeBody.applyImpulse(impulse,currentPoint);
+                            component.bPhysicsOn = true;
+                        } else {
+                            document.getElementById(this.id).className = "element";
+                            component.bPhysicsOn = false;
+                        }
+                        
+                        break;
+                    case "elem_2":  //Material
+                        console.log("SIN:" + Math.sin(Math.random() * 360));
+
+                        if (component.torus.material.constructor.name === "MeshPhongMaterial") {
+                            component.torus.material = new THREE.MeshNormalMaterial();
+                            document.getElementById(this.id).className = "elementClick";
+                        } else {
+                            component.torus.material = component.materialBrick;
+                            document.getElementById(this.id).className = "element";
+                        }
+                        break;
+                    case "elem_3":  //light
+                        if (component.directionalLight.intensity === 0.5) {
+                            document.getElementById(this.id).className = "elementClick";
+                            component.directionalLight.intensity = 0.0;
+                        } else {
+                            component.directionalLight.intensity = 0.5;
+                            document.getElementById(this.id).className = "element";
+                        }
+                        break;
+                    case "elem_4":  //shadow
+                        document.getElementById(this.id).className = (component.torus.receiveShadow ? "elementClick" : "element");
+                        
+                        // the torus!
+                        component.torus.receiveShadow = !component.torus.receiveShadow;
+                        component.materialBrick.needsUpdate = true;
+
+                        // the terrain!
+                        component.terrain.receiveShadow = !component.terrain.receiveShadow;
+                        component.terrainMat.needsUpdate = true;
+
+                        break;
+                     case "elem_5":  //trabant
+                        document.getElementById(this.id).className = (component.sphereSatRotational.scale.z === 1.0 ? "elementClick" : "element");
+                        console.log(component.sphereSatRotational.scale.z);
+
+                        if (component.sphereSatRotational.scale.z === 1.0) {
+                            component.tweenSphereScaleZ = new TWEEN.Tween({ z: 1.0 })
+                                .to({ z: 3.0 }, 1000);
+                        } else {
+                            component.tweenSphereScaleZ = new TWEEN.Tween({ z: 3.0 })
+                                .to({ z: 1.0 }, 1000);
+                        }
+
+                        component.tweenSphereScaleZ.onUpdate(function () {
+                            component.sphereSatRotational.scale.z = this.z;
+                        })
+                            .start();
+                        break;
+
+                    default:
+                        console.log(this.id + " not configured");
+                        break;
+                }
+
+            }, false);
+            //element.style.backgroundColor = 'rgba(0,127,127,' + (Math.random() * 0.5 + 0.25) + ')';
+
+            // var number = document.createElement('div');
+            // number.className = 'number';
+            // number.textContent = i.toString(10);
+            // element.appendChild(number);
+
+            var symbol = document.createElement('div');
+            symbol.className = 'symbol';
+            symbol.textContent = liEmoj[i - 1];
+            element.appendChild(symbol);
+
+            var details = document.createElement('div');
+            details.className = 'details';
+            details.innerHTML = "Toggle<br>" + liTxt[i - 1];
+            element.appendChild(details);
+
+            var object = new CSS3DRenderer.CSS3DObject(element);
+            object.position.x = menuPosX + (-100 * i);
+            object.position.y = 200;
+            this.sceneCSS.add(object);
+        }
+
+        ///////////////// examples of ui elements
+        //  label wrap around checkbox
+        // var eInp = document.createElement('input');
+        // eInp.className = 'w3-check';
+        // eInp.type = "checkbox";
+        // eInp.addEventListener( 'change', function ( event ) {
+        //     if(this.checked) {
+        //         console.log("checked");
+        //         component.torus.scale.set(2,2,2); 
+        //     } else {
+        //         console.log("unchecked");
+        //         component.torus.scale.set(0.5,0.5,0.5);
+        //     }     
+        // }, false );
+        // var eLblChkbx = document.createElement('label');
+        // eLblChkbx.textContent = "flatten torus";
+        // //eLblChkbx.style.backgroundColor = 'rgba(127,127,127,222)';
+        // eLblChkbx.className = 'elementChk';
+        // eLblChkbx.appendChild(eInp);
+        // var objectChk = new CSS3DRenderer.CSS3DObject(eLblChkbx);
+        // objectChk.position.x = menuPosX -4*100;
+        // objectChk.position.y = 0;
+        // this.sceneCSS.add(objectChk);
+
+        // slider --> it's static, not working
+        // var eSlider = document.createElement('input');
+        // eSlider.type = "range";
+        // eSlider.min = '1';        
+        // eSlider.max = '100';
+        // eSlider.value = '1';
+        // eSlider.style.backgroundColor = 'rgba(127,127,127,222)';
+        // eSlider.addEventListener('change', function (event) {
+        //     debugger;
+        //     component.torus.scale.set(0.5,0.5,0.5);
+        // }, false);
+        // var objectSlid = new CSS3DRenderer.CSS3DObject(eSlider);
+        // objectSlid.position.x = -100;
+        // objectSlid.position.y = 100;
+        // this.sceneCSS.add(objectSlid);
+
+        // dropdown menu
+        var dd = document.createElement('div');
+        dd.className = 'dropdown';
+        dd.textContent = 'Dropdown Menu';
+    
+        // entry 1
+        var dd_content = document.createElement('div');
+        dd_content.className = 'dropdown-content';
+        dd_content.textContent = 'Toggle Particle System Rotation Velocity (Tween)';
+        dd_content.id = 'idPSystemRotY';
+        dd.appendChild(dd_content);
+        dd_content.addEventListener('click', function (event) {
+
+            if(component.pivotPointPmSystem.userData.rotation_yVel === 0.0){
+                component.tweenPivotPartSysRotY = new TWEEN.Tween({ yVel: 0.0 })
+                    .to({ yVel: 0.005 }, 3000);
+                //document.getElementById('idPSystemRotY').textContent = 'Stop Particle System Rotation Velocity (Tween)';
+            }else{
+                component.tweenPivotPartSysRotY = new TWEEN.Tween({ yVel: 0.005 })
+                    .to({ yVel: 0.0 }, 3000);
+                //document.getElementById('idPSystemRotY').textContent = 'Start Particle System Rotation Velocity (Tween)';
+            }
+
+            component.tweenPivotPartSysRotY.onUpdate(function () {
+                component.pivotPointPmSystem.userData.rotation_yVel = this.yVel;
+            }).start();
+
+            console.log(component.pivotPointPmSystem.userData.rotation_yVel);
+        }, false);
+
+
+        // Entry 2
+        var dd_content2 = document.createElement('div');
+        dd_content2.className = 'dropdown-content';
+        dd_content2.textContent = 'New Terrain';
+        dd_content2.style.fontWeight = "bold";
+        dd_content.appendChild(dd_content2);
+        dd_content2.addEventListener('click', function (event) {
+            component.scene.remove(component.terrain);
+            component.initiateTerrain();
+
+        }, false);
+
+        var object = new CSS3DRenderer.CSS3DObject(dd);
+        object.position.set(menuPosX + 100, 240, 0);
+        this.sceneCSS.add(object);
+    }
+
+
+    private initiateParticles() {
+        let geom = new THREE.Geometry();
+        let material = new THREE.PointsMaterial({
+            size: 1,    // pixel default = 1
+            //     transparent: true,
+            //     opacity: 0.50,
+            //     //vertexColors: true, // default = false
+            sizeAttenuation: true, // default = false // same size, regardless of how far from the camera
+            color: 0xf9ea63
+        });
+
+        let range = 290;
+        for (let i = 0; i < 15000; i++) {
+            var alpha = Math.random() * 360;
+            var particle = new THREE.Vector3(
+                range * Math.cos(alpha) - 30 + Math.random() * 60,//* Math.random(), //- range / 2,
+                Math.random() - 5 + Math.random() * 15,
+                range * Math.sin(alpha) - 30 + Math.random() * 60//* Math.random() //- range / 2
+            );
+            geom.vertices.push(particle);
+            // var color = new THREE.Color(0x00ff00);
+            //     color.setHSL(color.getHSL().h,
+            //     color.getHSL().s,
+            //     Math.random() * color.getHSL().l);
+            // geom.colors.push(color);
+        }
+
+        this.pmSystem = new THREE.Points(geom, material);
+        this.scene.add(this.pmSystem);
+
+        // make the pivot points the particle system's parent
+        this.pivotPointPmSystem = new THREE.Object3D();
+        this.pivotPointPmSystem.userData = {rotation_yVel: 0.001};       // velocity of pivot's update
+        this.pivotPointPmSystem.add(this.pmSystem);
+        this.scene.add(this.pivotPointPmSystem);
+
+    }
+
+    private initiateTerrain(){
+
+        // create vertices
+        var depth = 300;
+        var width = 300;
+        var spacingX = Math.random()*10+10;
+        var spacingZ = spacingX;
+        var height = 100;
+        let offsetX:number = -width*spacingX/2;
+        let offsetZ:number = depth*spacingZ/2;
+        let offsetY:number = -200;
+
+        //var scale = Chroma.scale(['blue','green','gray']).domain([0,height]);
+        //var scale = Chroma.scale([0x00FFFF,0xFF00FF,0x00FF00]).domain([0,height]);
+        var scale = Chroma.scale([[Math.random()*255,128,128],[0,Math.random()*255,Math.random()*255],[200,200,200]]).domain([1, height]);
+
+        var geometry = new THREE.Geometry();
+
+
+        //With Perlin
+        let noise = Perlin.generatePerlinNoise(300, 300);
+        for (var z = 0 ; z < depth ; z++) {
+            for (var x = 0 ; x < width ; x++) {
+
+                //var yValue = Math.abs(noise.perlin2(x / 10, z / 10) * height * 2);
+                //let yValue = Math.abs(Perlin.generateWhiteNoise(2, 3) * height * 2);
+                //z===0 ? (console.log("x: " + x + ", noise[x]: " + noise[x])) : 0;
+                
+                var vertex = new THREE.Vector3(
+                    x*spacingX,
+                    Math.abs(noise[(z*depth)+x]) * height,
+                    //Math.random()*(height+x+x+z),
+                    z*spacingZ
+                );
+                geometry.vertices.push(vertex);
+            }
+        }
+        console.log("geometry.vertices[0]: " + JSON.stringify(geometry.vertices[0]));
+        console.log("geometry.vertices[1]: " + JSON.stringify(geometry.vertices[1]));
+        
+
+        //define faces
+        for (var z = 0 ; z < depth-1 ; z++) {
+            for (var x = 0 ; x < width-1 ; x++) {
+                // we need to point to the position in the array
+                // a - - b
+                // |  x  |
+                // c - - d
+                var a = x + z*width;
+                var b = (x+1) + (z * width);
+                var c = x + ((z+1) * width);
+                var d = (x+1) + ((z+1) * width);
+
+                var face1 = new THREE.Face3(b, a, c );
+                var face2 = new THREE.Face3(c ,d, b );
+
+                // console.log("High1: " + this.getHighPoint(geometry, face1));
+                 //console.log("High2: " + this.getHighPoint(geometry, face2));
+                
+                face1.color = new THREE.Color(
+                    scale(this.getHighPoint(geometry, face1)).hex());
+                face2.color = new THREE.Color(
+                    //this.getHighPoint(geometry, face1)/(100*3),
+                    //0.5,
+                    //0.5
+                    scale(this.getHighPoint(geometry, face2)).hex());
+                geometry.faces.push(face1);
+                geometry.faces.push(face2);
+            }
+        }
+
+        geometry.computeVertexNormals(true); // smoother
+        geometry.computeFaceNormals(); // light
+
+        // setup the material
+        this.terrainMat = new THREE.MeshPhongMaterial();
+        this.terrainMat.vertexColors = THREE.FaceColors;
+
+        // create the mesh
+        this.terrain = new THREE.Mesh(geometry,this.terrainMat);
+
+        this.terrain.position.set(offsetX, offsetY, offsetZ);
+        this.terrain.quaternion.setFromAxisAngle(new THREE.Vector3(0,-1,0),-Math.PI/2);
+
+        this.terrain.receiveShadow =true;
+
+        this.scene.add(this.terrain);
+
+
+        /////////////////////// Create the cannonjs body and shape for terrain
+        // Create a matrix of height values
+        var matrix = [];
+        for (var i = 0; i < depth; i++) {
+            matrix.push([]);
+            for (var j = 0; j < width; j++) {			
+                var h = Math.abs(noise[(i*depth)+j]) * 100;
+                matrix[i].push(h);
+                //console.log(h);
+                
+            }
+        }
+        //console.log("matrix0: " + matrix[0][0]);
+        //console.log("matrix1: " + matrix[0][1]);
+
+        // Create the heightfield
+         var groundShape = new Cannon.Heightfield(matrix, {
+              elementSize: spacingX
+         });
+
+        //var groundShape = new Cannon.Plane();
+        var groundBody = new Cannon.Body({ mass: 0});
+        groundBody.addShape(groundShape);
+        groundBody.quaternion.setFromAxisAngle(new Cannon.Vec3(1,0,0),-Math.PI/2);
+        console.log("groundBody.quaternion: " + groundBody.quaternion);
+        
+        //groundBody.quaternion.z = THREE.Math.degToRad(45);
+        //groundBody.position.set(-width*(spacingX/2), -520, depth*(spacingZ/2));
+        groundBody.position.set(offsetX, offsetY, offsetZ);
+        this.cannonWorld.addBody(groundBody);
+
+        // add visual terrain
+        // if(groundBody instanceof Cannon.Body){
+        //     // get mesh
+        //     // has one shape... the heightfield
+        //     if(groundShape.type === Cannon.Shape.types.HEIGHTFIELD){
+        //         var geometry = new THREE.Geometry();
+
+        //         var v0 = new Cannon.Vec3();
+        //         var v1 = new Cannon.Vec3();
+        //         var v2 = new Cannon.Vec3();
+        //         for (var xi = 0; xi < groundShape.data.length - 1; xi++) {
+        //             console.log("xi: " + xi);
+        //             for (var yi = 0; yi < groundShape.data[xi].length - 1; yi++) {
+        //                 for (var k = 0; k < 2; k++) {
+        //                     groundShape.getConvexTrianglePillar(xi, yi, k===0);
+        //                     v0.copy(groundShape.pillarConvex.vertices[0]);
+        //                     v1.copy(groundShape.pillarConvex.vertices[1]);
+        //                     v2.copy(groundShape.pillarConvex.vertices[2]);
+        //                     v0.vadd(groundShape.pillarOffset, v0);
+        //                     v1.vadd(groundShape.pillarOffset, v1);
+        //                     v2.vadd(groundShape.pillarOffset, v2);
+        //                     geometry.vertices.push(
+        //                         new THREE.Vector3(v0.x, v0.y, v0.z),
+        //                         new THREE.Vector3(v1.x, v1.y, v1.z),
+        //                         new THREE.Vector3(v2.x, v2.y, v2.z)
+        //                     );
+        //                     var i = geometry.vertices.length - 3;
+        //                     geometry.faces.push(new THREE.Face3(i, i+1, i+2));
+        //                 }
+        //             }
+        //         }
+        //         geometry.computeBoundingSphere();
+        //         geometry.computeVertexNormals(true); // smoother
+        //         geometry.computeFaceNormals(); // light
+
+        //         // setup the material
+        //         this.terrainMat = new THREE.MeshPhongMaterial();
+        //         this.terrainMat.vertexColors = THREE.FaceColors;
+
+        //         // create the mesh
+        //         this.terrain = new THREE.Mesh(geometry,this.terrainMat);
+        //         this.terrain.receiveShadow = true;
+
+        //         // position and quaternion
+        //         groundBody.quaternion.setFromAxisAngle(new Cannon.Vec3(1,1,1),-Math.PI/2);
+ 
+        //         var o = groundBody.shapeOffsets[0];
+        //         var q = groundBody.shapeOrientations[0];
+                
+        //         this.terrain.position.set(o.x, o.y, o.z);
+        //         this.terrain.quaternion.setFromAxisAngle(new THREE.Vector3(1,1,1),-Math.PI/2);
+                
+        //         // add mesh to scene
+        //         //mesh.useQuaternion = true;
+        //         this.scene.add(this.terrain);
+        //     }
+            
+        // }
+
+
+
+        /////////////////////TEST
+        // Add spheres
+        var mat = new THREE.MeshPhongMaterial();
+        var comp = this;
+
+        var mass = 5;
+        for(var i=0; i<10; i++){
+            for (var j = 0; j < 10; j++) {
+ 
+                    var sphereShape = new Cannon.Sphere(10);
+                    var sphereBody= new Cannon.Body({ mass: mass });
+                    sphereBody.addShape(sphereShape);
+                    //sphereBody.position.set(i*20*spacingX-(width*(spacingX/2)),0,j*20*spacingX-(depth*(spacingZ/2)));
+                    sphereBody.position.set(i*5*spacingX-2000,0,j*5*spacingX-2000);
+                    comp.cannonBalls.push(sphereBody);
+                    comp.cannonWorld.addBody(sphereBody);
+                    
+                    // viasual
+                    var geom = new THREE.SphereGeometry(10, 8, 8);
+                    var mesh= new THREE.Mesh(geom, mat);
+                    //mesh.position.set(i*20*spacingX-(width*(spacingX/2)),0,j*20*spacingX-(depth*(spacingZ/2)));
+                    mesh.position.set(i*5*spacingX-2000,0,j*5*spacingX-2000);
+                    comp.sceneBalls.push(mesh);
+                    comp.scene.add(mesh);
+
+            }
+        }
+    }
+
+    private getHighPoint(geometry, face): number {
+
+        var v1 = geometry.vertices[face.a].y;
+        var v2 = geometry.vertices[face.b].y;
+        var v3 = geometry.vertices[face.c].y;
+ 
+        return Math.max(v1, v2, v3);
+     }
+
+    private createCSSRenderer() {
+        this.sceneCSS = new THREE.Scene();
+
+        this.rendererCSS = new CSS3DRenderer.CSS3DRenderer();
+        this.rendererCSS.setSize(window.innerWidth * this.scrSize, window.innerHeight * this.scrSize);
+        this.rendererCSS.domElement.style.position = 'absolute';
+        //this.rendererCSS.domElement.style.top = "40px";
+        this.rendererCSS.domElement.style.zIndex = "2"; // required
+
+        this.htmlDivCanvas.appendChild(this.rendererCSS.domElement);
+    }
+
+    private initPhysicWorld(){
+        this.cannonWorld = new Cannon.World();
+        this.cannonWorld.quatNormalizeSkip = 2;
+        this.cannonWorld.quatNormalizeFast = true;
+        this.cannonWorld.gravity.set(0,-900,0);    // X, Y, Z direction // deal with timestep in render func
+        this.cannonWorld.broadphase = new Cannon.NaiveBroadphase(); // activate colliding bodies
+        this.cannonWorld.solver.iterations = 10;
+        this.cannonWorld.defaultContactMaterial.contactEquationRelaxation = 0.8;
+    }
+
+
+    public onResize() {
+        this.camera.aspect = this.aspRatio;
+        this.camera.updateProjectionMatrix();
+        console.log(`onResize: Witdh: ${window.innerWidth * this.scrSize}, Height: ${window.innerHeight * this.scrSize}`);
+        this.renderer.setSize(window.innerWidth * this.scrSize, window.innerHeight * this.scrSize);
+        this.rendererCSS.setSize(window.innerWidth * this.scrSize, window.innerHeight * this.scrSize);
+    }
+}
+
+

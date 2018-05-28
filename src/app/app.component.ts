@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
+// component decorator(s)
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['app.component.css'],
+  templateUrl: './app.component.html'
+
 })
 export class AppComponent {
-  title = 'app';
+  test = 'app';
 }

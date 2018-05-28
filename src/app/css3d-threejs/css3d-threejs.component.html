@@ -1,0 +1,38 @@
+<!-- wrap w3 -->
+<div class="w3-container">
+  <header>
+    <div class="w3-container ">
+      <h1>
+        <b>A Three.js CSS3d showcase...</b>
+      </h1>
+      This canvas contains two scenes from
+      <em>THREE</em> js and two renderer elements, a
+      <em>WebGLRenderer</em> and a
+      <em>CSS3DRenderer</em>.
+      <br> The focus is the integration and handling on the CSS 3d in the scene. Features for this showcase are clickable, highlight,
+      moveable css elements. One drop-down menu is integrated.
+      <br> Additionally the WebGL scene contains a random generated terrain, light, shadow, camera handling with mouse, physics
+      with collision detection, tween, object scaling, rotation around a (pivot-)point and a simple particle system. Play with the clickable elements and see whats happen.
+      <br>
+      <br> A list of used libraries / packages for this angular controller example:
+    </div>
+  </header>
+  <div class="w3-container ">
+    <code>
+      <ul>
+        <li>Three.js R91 (V0.91.0) / NPM: npm i three / main 3D part</li>
+        <li>CSS3dRenderer (V1.0.1) / NPM: npm i three-css3drenderer / CSS part</li>
+        <li>Trackball controls (V0.0.7) / NPM: npm i three-trackballcontrols / Camera control with mouse</li>
+        <li>Tween (V16.6.0) / NPM: npm i @tweenjs/tween.js / Soft moving objects</li>
+        <li>Cannon (V0.6.1) / NPM: npm i cannon / Physics</li>
+        <li>Perlin Noise (V0.0.1) / NPM: npm i perlin-noise / Noise for terrain</li>
+        <li>Chroma (V1.3.7) / NPM: npm i chroma-js / Color scaling for heightfield</li>
+      </ul>
+    </code>
+  </div>
+  <!-- canvas here -->
+  <!--<canvas class="w3-center" #canvasCSS3d (window:resize)="onResize($event)"></canvas>-->
+  <div class="w3-container">
+      <div #canvasCSS3d (window:resize)="onResize()"></div>
+  </div>
+</div>

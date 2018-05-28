@@ -1,0 +1,90 @@
+<!-- 
+Help:
+    Desc: Template reference variables ( #var )
+        Link: https://angular.io/guide/template-syntax#ref-vars
+    Desc: HTML DOM Events (function)
+        Link: https://www.w3schools.com/jsref/dom_obj_event.asp 
+-->
+
+<!-- wrap w3 -->
+<div class="w3-container">
+    <header>
+            <div class="w3-container ">
+                <h1><b>A Three.js cube showcase...</b></h1>
+                In the canvas below you can play with at least one spinning cube. It's size is set to 1.0 "unitless" length of each edge.<br>
+                The scene contains a plane below the cubes and a spotlight over it.<br>
+                In this example the user cannot interact directly with the canvas via keybord or mouse movement.<br>
+                Play around with the settings you can change.
+            </div>
+            <div class="w3-container ">
+                <b>Note:</b>
+                <ul>
+                    <li>The 3D scene is set up on a HTML canvas element.</li>
+                    <li>Only the <em>Threejs</em> library is used here.</li>
+                </ul>
+            </div>
+    </header>
+
+    <div class="w3-container">
+        <!-- Angular Template reference variable '#': Use the hash symbol (#) to declare a reference variable.  -->
+        
+        <!-- canvas here -->
+        <div class="w3-center">
+            <canvas class="w3-center" #canvas (window:resize)="onResize()"></canvas>
+        </div>
+       
+        <!-- Setting UI -->
+        <div class="w3-row">
+            <!-- with two way binding with ngModule, we need here to import the FormsModule-->
+            
+            <!-- Cube Rotation Speed X, Y, Z-->
+            <div class="w3-col s4 w3-left">Cube Rotation Speed X: {{rotationSpeedX/1000}}</div>
+            <div class="w3-col s8 w3-left">
+                <input [(ngModel)]="rotationSpeedX" type="range" min="1" max="100" class="slider">
+            </div>
+            <div class="w3-col s4 w3-left">Cube Rotation Speed Y: {{rotationSpeedY/1000}}</div>
+            <div class="w3-col s8 w3-left">
+                <input [(ngModel)]="rotationSpeedY" type="range" min="1" max="100" class="slider">
+            </div>
+            <div class="w3-col s4 w3-left">Cube Rotation Speed Z: {{rotationSpeedZ/1000}}</div>
+            <div class="w3-col s8 w3-left">
+                <input [(ngModel)]="rotationSpeedZ" type="range" min="1" max="100" class="slider">
+            </div>
+
+            <!-- Camera Position Z -->
+            <div class="w3-col s4 w3-left">Camera Position Z: {{camPosZ}}</div>
+            <div class="w3-col s8 w3-left">
+                <input [(ngModel)]="camPosZ" type="range" min="2" max="30" class="slider">
+            </div>
+
+            <!-- Number Of Cubes -->
+            <div class="w3-col s4 w3-left">Number Of Cubes: {{numOfCubes}}</div>
+            <div class="w3-col s8 w3-left">
+                <input type="range" #id_In_NumOfCubes (input)="changeNumOfCubes(id_In_NumOfCubes.value)" min="1" max="100" [value]="numOfCubes" class="slider">
+            </div>
+
+            <!-- Color or texture -->
+            <div class="w3-col s4 w3-left">Use Texture Or Colors:</div>
+            <div class="w3-col s8 w3-left">
+                <input #id_In_ChangeMaterial (change)="changeMaterial(id_In_ChangeMaterial.checked)" type="checkbox">
+            </div>
+        </div> 
+
+        <!-- with property binding... a clear solution
+        <input type="range" #refInRotSpeedX (change)="changeRotSpeedX(refInRotSpeedX.value)" min="1" max="100" [value]="rotationSpeedX" class="slider">
+        X {{rotationSpeedX}}
+        -->
+
+        <!-- with event binding... no godd solution-->
+        <!-- <input type="range" (change)="changeNumOfCubes($event)" min="1" max="100" [value]="numOfCubes" class="slider">
+        Cubes {{numOfCubes}} -->
+    </div>
+
+    <!-- textual info state-->
+    <br>
+    <div class="w3-container ">
+    You currently have {{numOfCubes}} cube(s) on the canvas. The rotational speed
+    is set to X={{rotationSpeedX/1000}}, Y={{rotationSpeedY/1000}}, Z={{rotationSpeedZ/1000}} for each cube.<br>
+    The camera is {{camPosZ}} units away from the zero point Z. The cubes have now a material with {{(id_In_ChangeMaterial.checked)? 'brick texture':'colors'}}.
+    </div>
+</div>
