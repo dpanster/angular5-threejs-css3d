@@ -9,11 +9,10 @@ import * as Cannon from 'cannon';
 
 enum Texture {
     BRICK = "assets/texture/Bricks.jpg",
-    EARTH = "./../../../assets/texture/earthmap.png",
     GAS_BRIGHT = "assets/texture/Gaseous_Bright.jpg",
-    GAS_DARK = "./../../../assets/texture/Gaseous_Dark.png",
-    GAS_GREEN = "./../../../assets/texture/Gaseous_Green.jpg",
-    MOON_BW = "./../../../assets/texture/Moon_BW.jpg",
+    GAS_DARK = "assets/texture/Gaseous_Dark.png",
+    GAS_GREEN = "assets/texture/Gaseous_Green.jpg",
+    MOON_BW = "assets/texture/Moon_BW.jpg",
 }
 
 export class MainCSS3d {

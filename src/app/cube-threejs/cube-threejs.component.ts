@@ -187,7 +187,7 @@ export class CubeThreejsComponent implements OnInit{
         let geometry = new THREE.BoxGeometry(this.size, this.size, this.size);
         //let geometry = new THREE.IcosahedronGeometry(1, 1);
     
-        this._texture_brick = new THREE.TextureLoader().load( "./../../assets/texture/Bricks.jpg" );
+        this._texture_brick = new THREE.TextureLoader().load( "/assets/texture/Bricks.jpg" );
         this._texture_brick.minFilter = THREE.LinearFilter;
         // check to set texture or pure color
         var matProps:any = {};
