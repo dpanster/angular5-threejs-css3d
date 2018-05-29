@@ -7,6 +7,14 @@ import * as Perlin from 'perlin-noise';
 import * as Chroma from 'chroma-js';
 import * as Cannon from 'cannon';
 
+enum Texture {
+    BRICK = "assets/texture/Bricks.jpg",
+    GAS_BRIGHT = "assets/texture/Gaseous_Bright.jpg",
+    GAS_DARK = "assets/texture/Gaseous_Dark.png",
+    GAS_GREEN = "assets/texture/Gaseous_Green.jpg",
+    MOON_BW = "assets/texture/Moon_BW.jpg",
+}
+
 export class MainCSS3d {
 
     // private main parts
@@ -38,22 +46,26 @@ export class MainCSS3d {
     // tween
     private tweenSphereScaleZ: TWEEN.Tween;
     private tweenPivotPartSysRotY: TWEEN.Tween;
-    
+    private tweenPhysicObjects: TWEEN.Tween;
+    private tweenPhysicCSSElem: TWEEN.Tween;
+
     //material
-    private materialBrick: any;   // dynamic
     private terrainMat: THREE.MeshPhongMaterial;
 
     // light
     private directionalLight: THREE.SpotLight;
 
     // cannon physics
-    //private shapeBody: Cannon.Body;
-    //private groundBody: Cannon.Body;
-    //private groundShape: Cannon.Heightfield;
-    private timestep:number = 1/60;
-    private bPhysicsOn:boolean = false;
+    private timestep: number = 1 / 60;
+    private bPhysicsOn: boolean = false;
     private cannonBalls: Array<Cannon.Body> = [];
 
+    /**
+     * Creates an instance of MainCSS3d.
+     * @param {HTMLDivElement} can 
+     * @param {number} screenSizePercent 
+     * @memberof MainCSS3d
+     */
     constructor(can: HTMLDivElement, screenSizePercent: number) {
         // set
         this.htmlDivCanvas = can;
@@ -64,7 +76,7 @@ export class MainCSS3d {
         this.initiateCamera();
 
         /////// physics
-        this.initPhysicWorld(); 
+        this.initPhysicWorld();
 
         /////// webGl 
         this.createRenderer();
@@ -72,7 +84,7 @@ export class MainCSS3d {
         this.initiateLight();
         this.initiateParticles();
         this.initiateTerrain();
-        this.addHelpers();
+        //this.addHelpers();
         this.renderer.render(this.scene, this.camera);
 
         ////////// css3d
@@ -85,15 +97,13 @@ export class MainCSS3d {
 
         // tween
         this.initTween();
-   
+
         // life cycle
         this.animate();
-
     }
 
     /**
-     * Rendering (initial, loop)
-     * 
+     * @description Rendering (initial, loop)
      * @private
      * @memberof MainCSS3d
      */
@@ -120,7 +130,12 @@ export class MainCSS3d {
         this.htmlDivCanvas.appendChild(this.renderer.domElement);
     }
 
-
+    /**
+     * 
+     * @description Sets up camera position 
+     * @private
+     * @memberof MainCSS3d
+     */
     private initiateCamera() {
 
         this.camera = new THREE.PerspectiveCamera(
@@ -132,19 +147,48 @@ export class MainCSS3d {
         this.camera.position.set(-200, 200, 800);
 
     }
-
+    /**
+     * 
+     * @description sets up light(s)
+     * @private
+     * @memberof MainCSS3d
+     */
     private initiateLight() {
         // light
-        var light = new THREE.AmbientLight(0xAAAAAA); // soft white light
+        var light = new THREE.AmbientLight(0xBBBBBB); // soft white light
         this.scene.add(light);
 
-        this.directionalLight = new THREE.SpotLight(0xffffff, 0.5);
+        this.directionalLight = new THREE.SpotLight(0xffffff, 0.4);
         this.directionalLight.position.set(0, 400, 0);
         this.directionalLight.target.position.set(10, 10, 0);
-        //this.directionalLight.target = this.sphereSatRotational;
+        //this.directionalLight.target = this.sphereSatRotational; // target to an object
         this.directionalLight.castShadow = true;
         this.scene.add(this.directionalLight);
 
+    }
+
+    /**
+     * 
+     * @description Creates an texture from assetTexture, adapt optional to a torus geometry.
+     * @private
+     * @param {string} assetTexture The texture path from asset folder.
+     * @param {boolean} [isTorus=false] Is optional and default is false.
+     * @returns {THREE.MeshPhongMaterial} The generated MeshPongMaterail contain the texture.
+     * @memberof MainCSS3d
+     */
+    private getMeshPhongMaterialFromTexture(assetTexture: string, isTorus: boolean = false): THREE.MeshPhongMaterial {
+        let texture: THREE.Texture = new THREE.TextureLoader().load(assetTexture);
+        texture.minFilter = THREE.LinearFilter;
+
+        if (isTorus === true) {
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(6, 2);
+        }
+        return (new THREE.MeshPhongMaterial({
+            map: texture,
+            specular: 0x773000, // green + blue
+            shininess: 10
+        }));
     }
 
     private initiateGeometies() {
@@ -157,48 +201,63 @@ export class MainCSS3d {
             100 // tubular segments
         );
 
-        // Material
-        let texture;
-        texture = new THREE.TextureLoader().load("./../../../assets/texture/brick_stone_wall_0078_01.jpg");
-        texture.minFilter = THREE.LinearFilter;
-        this.materialBrick = new THREE.MeshPhongMaterial({ map: texture });
-        this.torus = new THREE.Mesh(geometry, this.materialBrick);
+        // Torus
+        this.torus = new THREE.Mesh(geometry, this.getMeshPhongMaterialFromTexture(Texture.GAS_BRIGHT, true));
+        this.torus.userData = { texture: Texture.GAS_BRIGHT };       // velocity of pivot's update
         this.torus.rotateX(THREE.Math.degToRad(90)); // 90 degree
         this.torus.receiveShadow = true;
         this.torus.castShadow = true;
+
 
         // add a pivot point
         this.pivotPoint = new THREE.Object3D();
 
         //// rotation satellite top of torus
-        var sphereGeom = new THREE.SphereGeometry(20, 32, 32);
+        var sphereGeom = new THREE.SphereGeometry(30, 32, 32);
 
-        this.sphereSatRotational = new THREE.Mesh(sphereGeom, this.materialBrick);
+        this.sphereSatRotational = new THREE.Mesh(sphereGeom, this.getMeshPhongMaterialFromTexture(Texture.MOON_BW));
         // 200 = R of torus, 15 = half tube torus, 10 = half diameter sphere 
-        this.sphereSatRotational.position.set(200, 15 + 34, 0);
+        this.sphereSatRotational.position.set(200, 15 + 45, 0);
 
         this.sphereSatRotational.castShadow = true;
-
+        this.sphereSatRotational.receiveShadow = true;
 
         // make the pivot points the sphere's parent
         this.pivotPoint.add(this.sphereSatRotational);
 
-
-            // var mass = 5;
-            // var sphereShape = new Cannon.Sphere(20);
-            // this.shapeBody = new Cannon.Body({mass: mass}); // Define a rigid body using the shape and other physical properties needed
-            // this.shapeBody.addShape(sphereShape);
-            // this.shapeBody.position.set(200, 15 + 34, 0);
-            // //this.shapeBody.quaternion.set(0,1,0,1);
-            // this.shapeBody.angularVelocity.set(0,5,0);               
-            // this.cannonWorld.addBody(this.shapeBody); // Add the body to the world.
-
-
-
         // add to scene
         this.scene.add(this.torus);
         this.scene.add(this.pivotPoint);
-       
+
+        // Add different spheres with cannon shapes / bodies
+        for (var i = 1; i < 3; i++) {
+            for (var j = 1; j < 8; j++) {
+                let factor = Math.random() * 30 + 5;
+                console.log("factor: " + factor);
+
+                let sign: number = (factor > 20) ? +1 : -1; // positive or negative
+                var sphereShape = new Cannon.Sphere(factor);
+                var sphereBody = new Cannon.Body({ mass: factor });
+                sphereBody.addShape(sphereShape);
+                sphereBody.position.set(-450 + 140 * j, 70 * i+100, 20 * i * j - 150);
+                sphereBody.angularVelocity.set(0, factor / 100 * sign,0 );
+                sphereBody.quaternion.set(0.2, 0.5, 0, 1);
+                this.cannonBalls.push(sphereBody);
+                this.cannonWorld.addBody(sphereBody);
+
+                // visual
+                var geom = new THREE.SphereGeometry(factor, 32, 32);
+                var mesh = new THREE.Mesh(geom, this.getMeshPhongMaterialFromTexture(Texture.GAS_GREEN));
+                mesh.position.set(-450 + 140 * j, 70 * i+100, 20 * i * j - 150);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                this.sceneBalls.push(mesh);
+                this.scene.add(mesh);
+
+            }
+        }
+
+
     }
 
     private addHelpers() {
@@ -231,20 +290,20 @@ export class MainCSS3d {
         // tween up particle system at init
         let component: MainCSS3d = this;
         this.tweenPivotPartSysRotY = new TWEEN.Tween({ yVel: 0.0 })
-        .to({ yVel: 0.005 }, 3000)
-        .onUpdate(function () {
-            component.pivotPointPmSystem.userData.rotation_yVel = this.yVel;
-        })
-        .start();
+            .to({ yVel: 0.005 }, 3000)
+            .onUpdate(function () {
+                component.pivotPointPmSystem.userData.rotation_yVel = this.yVel;
+            })
+            .start();
     }
 
     private animate() {
 
         let component: MainCSS3d = this;
-        let setImpls = false; 
+        let setImpls = false;
 
         (function render(time) {
-            
+
             requestAnimationFrame(render);
 
             // objects
@@ -259,39 +318,28 @@ export class MainCSS3d {
 
             /// tween
             TWEEN.update(time);
-            component.pivotPoint.rotation.y += 0.02;
-            component.sphereSatRotational.rotation.y += 0.06;
-            
+            component.pivotPoint.rotation.y += 0.01;
+            component.sphereSatRotational.rotation.y += 0.01;
+
             // cannon physics                   
-            if(component.bPhysicsOn === false){
+            component.cannonWorld.step(1 / 6);
 
-            }else{
+            // physic the spheres
+            for (let i = 0; i < component.cannonBalls.length; i++) {
+                component.sceneBalls[i].position.set(
+                    component.cannonBalls[i].position.x,
+                    component.cannonBalls[i].position.y,
+                    component.cannonBalls[i].position.z
+                );
 
-                            component.cannonWorld.step(1/60);    
-
-                // component.sphereSatRotational.quaternion.set(
-                //     component.shapeBody.quaternion.x,
-                //     component.shapeBody.quaternion.y,
-                //     component.shapeBody.quaternion.z,
-                //     component.shapeBody.quaternion.w
-                // );
-
-                // component.sphereSatRotational.position.set(
-                //     component.shapeBody.position.x,
-                //     component.shapeBody.position.y,
-                //     component.shapeBody.position.z
-                // );   
-                
-
-                
-                // // TEST
-                for(let i=0;i<component.cannonBalls.length;i++){
-                    component.sceneBalls[i].position.x = component.cannonBalls[i].position.x;
-                    component.sceneBalls[i].position.y = component.cannonBalls[i].position.y;
-                    component.sceneBalls[i].position.z = component.cannonBalls[i].position.z;
-                }
-
+                component.sceneBalls[i].quaternion.set(
+                    component.cannonBalls[i].quaternion.x,
+                    component.cannonBalls[i].quaternion.y,
+                    component.cannonBalls[i].quaternion.z,
+                    component.cannonBalls[i].quaternion.w
+                );
             }
+
         }());
     }
 
@@ -302,7 +350,7 @@ export class MainCSS3d {
         let component: MainCSS3d = this;
         let menuPosX = -250;
         let liEmoj: string[] = ["🙏", "👽", "😈", "👻", "😮"];
-        let liTxt: string[] = ["Physics!","Torus Material", "Light", "Shadow", "Satelite Scale X (tween)"];
+        let liTxt: string[] = ["Physics!", "Torus Material", "Light", "Satelite Scale X (tween)", "Reset Objects and Move this CSS Element"];
 
         for (let i = 1; i <= 5; i++) {
             var element = document.createElement('div');
@@ -319,7 +367,7 @@ export class MainCSS3d {
 
                             // Add an impulse to the center
                             console.log("x: " + component.sphereSatRotational.position.x + ", z:" + component.sphereSatRotational.position.z);
-                            
+
                             // var currentPoint = new Cannon.Vec3(
                             //     component.sphereSatRotational.position.x+1,
                             //     component.sphereSatRotational.position.y,
@@ -328,45 +376,38 @@ export class MainCSS3d {
                             // var impulse = new Cannon.Vec3(0,0,-1000);
                             // component.shapeBody.applyImpulse(impulse,currentPoint);
                             component.bPhysicsOn = true;
+                            component.cannonWorld.gravity.set(0, -9.81, 0);
                         } else {
                             document.getElementById(this.id).className = "element";
+                            component.cannonWorld.gravity.set(0, 0, 0);
                             component.bPhysicsOn = false;
                         }
-                        
+
                         break;
                     case "elem_2":  //Material
-                        console.log("SIN:" + Math.sin(Math.random() * 360));
+                        // toggle the torus material, with help of setting user data
+                        console.log("component.torus.userData.texture: " + component.torus.userData.texture);
 
-                        if (component.torus.material.constructor.name === "MeshPhongMaterial") {
-                            component.torus.material = new THREE.MeshNormalMaterial();
+                        if (component.torus.userData.texture === Texture.GAS_BRIGHT) {
+                            component.torus.material = component.getMeshPhongMaterialFromTexture(Texture.GAS_DARK, true);
+                            component.torus.userData.texture = Texture.GAS_DARK;
                             document.getElementById(this.id).className = "elementClick";
                         } else {
-                            component.torus.material = component.materialBrick;
+                            component.torus.material = component.getMeshPhongMaterialFromTexture(Texture.GAS_BRIGHT, true);
+                            component.torus.userData.texture = Texture.GAS_BRIGHT;
                             document.getElementById(this.id).className = "element";
                         }
                         break;
                     case "elem_3":  //light
-                        if (component.directionalLight.intensity === 0.5) {
+                        if (component.directionalLight.intensity === 0.4) {
                             document.getElementById(this.id).className = "elementClick";
                             component.directionalLight.intensity = 0.0;
                         } else {
-                            component.directionalLight.intensity = 0.5;
+                            component.directionalLight.intensity = 0.4;
                             document.getElementById(this.id).className = "element";
                         }
                         break;
-                    case "elem_4":  //shadow
-                        document.getElementById(this.id).className = (component.torus.receiveShadow ? "elementClick" : "element");
-                        
-                        // the torus!
-                        component.torus.receiveShadow = !component.torus.receiveShadow;
-                        component.materialBrick.needsUpdate = true;
-
-                        // the terrain!
-                        component.terrain.receiveShadow = !component.terrain.receiveShadow;
-                        component.terrainMat.needsUpdate = true;
-
-                        break;
-                     case "elem_5":  //trabant
+                    case "elem_4":  //trabant scale
                         document.getElementById(this.id).className = (component.sphereSatRotational.scale.z === 1.0 ? "elementClick" : "element");
                         console.log(component.sphereSatRotational.scale.z);
 
@@ -383,7 +424,38 @@ export class MainCSS3d {
                         })
                             .start();
                         break;
+                    case "elem_5":  //reset physic objects
+                        // everytime do the same sequential steps
+                        document.getElementById(this.id).className = "elementClick";
+                        
+                        component.cannonWorld.gravity.set(0, 0, 0);  // gravity off
 
+                        document.getElementById("elem_1").className = "element";
+                        component.bPhysicsOn = false;
+
+                        // tween objects upwards
+                        component.tweenPhysicObjects = new TWEEN.Tween({ yPos: 0 })
+                            .to({yPos: 250}, 2000)
+                            .onUpdate(function () {                            
+                                for (let i = 0; i < component.cannonBalls.length; i++) {
+                                    component.sceneBalls[i].position.y = component.cannonBalls[i].position.y = this.yPos;
+                                }
+                            })
+                            .onComplete(function(){
+                                document.getElementById("elem_5").className = "element";
+                            })
+                            .start();
+
+                        // tween CSS 3d element
+                        let targetPosZ = (component.sceneCSS.getObjectByName("elem_5").position.z === 0)? 150 : 0;
+                        component.tweenPhysicCSSElem = new TWEEN.Tween({ zPos: component.sceneCSS.getObjectByName("elem_5").position.z })
+                        .to({zPos: targetPosZ}, 1000)
+                        .onUpdate(function () {                            
+                            component.sceneCSS.getObjectByName("elem_5").position.z = this.zPos;
+                        })
+                        .start();
+
+                        break;
                     default:
                         console.log(this.id + " not configured");
                         break;
@@ -404,12 +476,14 @@ export class MainCSS3d {
 
             var details = document.createElement('div');
             details.className = 'details';
-            details.innerHTML = "Toggle<br>" + liTxt[i - 1];
+            details.innerHTML = (i==5)? liTxt[i - 1] : "Toggle<br>" + liTxt[i - 1];
             element.appendChild(details);
 
-            var object = new CSS3DRenderer.CSS3DObject(element);
+            let object:CSS3DRenderer.CSS3DObject = new CSS3DRenderer.CSS3DObject(element);
             object.position.x = menuPosX + (-100 * i);
             object.position.y = 200;
+            object.name = "elem_"+i;
+           // object.userData = {id: "elem_"+i};
             this.sceneCSS.add(object);
         }
 
@@ -457,7 +531,7 @@ export class MainCSS3d {
         var dd = document.createElement('div');
         dd.className = 'dropdown';
         dd.textContent = 'Dropdown Menu';
-    
+
         // entry 1
         var dd_content = document.createElement('div');
         dd_content.className = 'dropdown-content';
@@ -466,11 +540,11 @@ export class MainCSS3d {
         dd.appendChild(dd_content);
         dd_content.addEventListener('click', function (event) {
 
-            if(component.pivotPointPmSystem.userData.rotation_yVel === 0.0){
+            if (component.pivotPointPmSystem.userData.rotation_yVel === 0.0) {
                 component.tweenPivotPartSysRotY = new TWEEN.Tween({ yVel: 0.0 })
                     .to({ yVel: 0.005 }, 3000);
                 //document.getElementById('idPSystemRotY').textContent = 'Stop Particle System Rotation Velocity (Tween)';
-            }else{
+            } else {
                 component.tweenPivotPartSysRotY = new TWEEN.Tween({ yVel: 0.005 })
                     .to({ yVel: 0.0 }, 3000);
                 //document.getElementById('idPSystemRotY').textContent = 'Start Particle System Rotation Velocity (Tween)';
@@ -534,73 +608,72 @@ export class MainCSS3d {
 
         // make the pivot points the particle system's parent
         this.pivotPointPmSystem = new THREE.Object3D();
-        this.pivotPointPmSystem.userData = {rotation_yVel: 0.001};       // velocity of pivot's update
+        this.pivotPointPmSystem.userData = { rotation_yVel: 0.001 };       // velocity of pivot's update
         this.pivotPointPmSystem.add(this.pmSystem);
         this.scene.add(this.pivotPointPmSystem);
 
     }
 
-    private initiateTerrain(){
+    private initiateTerrain() {
 
         // create vertices
         var depth = 300;
         var width = 300;
-        var spacingX = Math.random()*10+10;
+        var spacingX = Math.random() * 10 + 10;
         var spacingZ = spacingX;
-        var height = 100;
-        let offsetX:number = -width*spacingX/2;
-        let offsetZ:number = depth*spacingZ/2;
-        let offsetY:number = -200;
+        var height = 120;
+        let offsetX: number = -width * spacingX / 2;
+        let offsetZ: number = depth * spacingZ / 2;
+        let offsetY: number = -250;
 
         //var scale = Chroma.scale(['blue','green','gray']).domain([0,height]);
         //var scale = Chroma.scale([0x00FFFF,0xFF00FF,0x00FF00]).domain([0,height]);
-        var scale = Chroma.scale([[Math.random()*255,128,128],[0,Math.random()*255,Math.random()*255],[200,200,200]]).domain([1, height]);
+        var scale = Chroma.scale([[Math.random() * 255, 128, 128], [0, Math.random() * 255, Math.random() * 255], [200, 200, 200]]).domain([1, height]);
 
         var geometry = new THREE.Geometry();
 
 
         //With Perlin
         let noise = Perlin.generatePerlinNoise(300, 300);
-        for (var z = 0 ; z < depth ; z++) {
-            for (var x = 0 ; x < width ; x++) {
+        for (var z = 0; z < depth; z++) {
+            for (var x = 0; x < width; x++) {
 
                 //var yValue = Math.abs(noise.perlin2(x / 10, z / 10) * height * 2);
                 //let yValue = Math.abs(Perlin.generateWhiteNoise(2, 3) * height * 2);
                 //z===0 ? (console.log("x: " + x + ", noise[x]: " + noise[x])) : 0;
-                
+
                 var vertex = new THREE.Vector3(
-                    x*spacingX,
-                    Math.abs(noise[(z*depth)+x]) * height,
+                    x * spacingX,
+                    Math.abs(noise[(z * depth) + x]) * height,
                     //Math.random()*(height+x+x+z),
-                    z*spacingZ
+                    z * spacingZ
                 );
                 geometry.vertices.push(vertex);
             }
         }
         console.log("geometry.vertices[0]: " + JSON.stringify(geometry.vertices[0]));
         console.log("geometry.vertices[1]: " + JSON.stringify(geometry.vertices[1]));
-        
+
 
         //define faces
-        for (var z = 0 ; z < depth-1 ; z++) {
-            for (var x = 0 ; x < width-1 ; x++) {
+        for (var z = 0; z < depth - 1; z++) {
+            for (var x = 0; x < width - 1; x++) {
                 // we need to point to the position in the array
                 // a - - b
                 // |  x  |
                 // c - - d
-                var a = x + z*width;
-                var b = (x+1) + (z * width);
-                var c = x + ((z+1) * width);
-                var d = (x+1) + ((z+1) * width);
+                var a = x + z * width;
+                var b = (x + 1) + (z * width);
+                var c = x + ((z + 1) * width);
+                var d = (x + 1) + ((z + 1) * width);
 
-                var face1 = new THREE.Face3(b, a, c );
-                var face2 = new THREE.Face3(c ,d, b );
+                var face1 = new THREE.Face3(b, a, c);
+                var face2 = new THREE.Face3(c, d, b);
 
                 // console.log("High1: " + this.getHighPoint(geometry, face1));
-                 //console.log("High2: " + this.getHighPoint(geometry, face2));
-                
-                face1.color = new THREE.Color(
-                    scale(this.getHighPoint(geometry, face1)).hex());
+                //console.log("High2: " + this.getHighPoint(geometry, face2));
+
+                face1.color = new THREE.Color(scale(this.getHighPoint(geometry, face1)).hex());
                 face2.color = new THREE.Color(
                     //this.getHighPoint(geometry, face1)/(100*3),
                     //0.5,
@@ -619,12 +692,12 @@ export class MainCSS3d {
         this.terrainMat.vertexColors = THREE.FaceColors;
 
         // create the mesh
-        this.terrain = new THREE.Mesh(geometry,this.terrainMat);
+        this.terrain = new THREE.Mesh(geometry, this.terrainMat);
 
         this.terrain.position.set(offsetX, offsetY, offsetZ);
-        this.terrain.quaternion.setFromAxisAngle(new THREE.Vector3(0,-1,0),-Math.PI/2);
+        this.terrain.quaternion.setFromAxisAngle(new THREE.Vector3(0, -1, 0), -Math.PI / 2);
 
-        this.terrain.receiveShadow =true;
+        this.terrain.receiveShadow = true;
 
         this.scene.add(this.terrain);
 
@@ -634,120 +707,33 @@ export class MainCSS3d {
         var matrix = [];
         for (var i = 0; i < depth; i++) {
             matrix.push([]);
-            for (var j = 0; j < width; j++) {			
-                var h = Math.abs(noise[(i*depth)+j]) * 100;
+            for (var j = 0; j < width; j++) {
+                var h = Math.abs(noise[(i * depth) + j]) * 100;
                 matrix[i].push(h);
                 //console.log(h);
-                
+
             }
         }
         //console.log("matrix0: " + matrix[0][0]);
         //console.log("matrix1: " + matrix[0][1]);
 
         // Create the heightfield
-         var groundShape = new Cannon.Heightfield(matrix, {
-              elementSize: spacingX
-         });
+        var groundShape = new Cannon.Heightfield(matrix, {
+            elementSize: spacingX
+        });
 
         //var groundShape = new Cannon.Plane();
-        var groundBody = new Cannon.Body({ mass: 0});
+        var groundBody = new Cannon.Body({ mass: 0 });
         groundBody.addShape(groundShape);
-        groundBody.quaternion.setFromAxisAngle(new Cannon.Vec3(1,0,0),-Math.PI/2);
+        groundBody.quaternion.setFromAxisAngle(new Cannon.Vec3(1, 0, 0), -Math.PI / 2);
         console.log("groundBody.quaternion: " + groundBody.quaternion);
-        
+
         //groundBody.quaternion.z = THREE.Math.degToRad(45);
         //groundBody.position.set(-width*(spacingX/2), -520, depth*(spacingZ/2));
         groundBody.position.set(offsetX, offsetY, offsetZ);
         this.cannonWorld.addBody(groundBody);
 
-        // add visual terrain
-        // if(groundBody instanceof Cannon.Body){
-        //     // get mesh
-        //     // has one shape... the heightfield
-        //     if(groundShape.type === Cannon.Shape.types.HEIGHTFIELD){
-        //         var geometry = new THREE.Geometry();
 
-        //         var v0 = new Cannon.Vec3();
-        //         var v1 = new Cannon.Vec3();
-        //         var v2 = new Cannon.Vec3();
-        //         for (var xi = 0; xi < groundShape.data.length - 1; xi++) {
-        //             console.log("xi: " + xi);
-        //             for (var yi = 0; yi < groundShape.data[xi].length - 1; yi++) {
-        //                 for (var k = 0; k < 2; k++) {
-        //                     groundShape.getConvexTrianglePillar(xi, yi, k===0);
-        //                     v0.copy(groundShape.pillarConvex.vertices[0]);
-        //                     v1.copy(groundShape.pillarConvex.vertices[1]);
-        //                     v2.copy(groundShape.pillarConvex.vertices[2]);
-        //                     v0.vadd(groundShape.pillarOffset, v0);
-        //                     v1.vadd(groundShape.pillarOffset, v1);
-        //                     v2.vadd(groundShape.pillarOffset, v2);
-        //                     geometry.vertices.push(
-        //                         new THREE.Vector3(v0.x, v0.y, v0.z),
-        //                         new THREE.Vector3(v1.x, v1.y, v1.z),
-        //                         new THREE.Vector3(v2.x, v2.y, v2.z)
-        //                     );
-        //                     var i = geometry.vertices.length - 3;
-        //                     geometry.faces.push(new THREE.Face3(i, i+1, i+2));
-        //                 }
-        //             }
-        //         }
-        //         geometry.computeBoundingSphere();
-        //         geometry.computeVertexNormals(true); // smoother
-        //         geometry.computeFaceNormals(); // light
-
-        //         // setup the material
-        //         this.terrainMat = new THREE.MeshPhongMaterial();
-        //         this.terrainMat.vertexColors = THREE.FaceColors;
-
-        //         // create the mesh
-        //         this.terrain = new THREE.Mesh(geometry,this.terrainMat);
-        //         this.terrain.receiveShadow = true;
-
-        //         // position and quaternion
-        //         groundBody.quaternion.setFromAxisAngle(new Cannon.Vec3(1,1,1),-Math.PI/2);
- 
-        //         var o = groundBody.shapeOffsets[0];
-        //         var q = groundBody.shapeOrientations[0];
-                
-        //         this.terrain.position.set(o.x, o.y, o.z);
-        //         this.terrain.quaternion.setFromAxisAngle(new THREE.Vector3(1,1,1),-Math.PI/2);
-                
-        //         // add mesh to scene
-        //         //mesh.useQuaternion = true;
-        //         this.scene.add(this.terrain);
-        //     }
-            
-        // }
-
-
-
-        /////////////////////TEST
-        // Add spheres
-        var mat = new THREE.MeshPhongMaterial();
-        var comp = this;
-
-        var mass = 5;
-        for(var i=0; i<10; i++){
-            for (var j = 0; j < 10; j++) {
- 
-                    var sphereShape = new Cannon.Sphere(10);
-                    var sphereBody= new Cannon.Body({ mass: mass });
-                    sphereBody.addShape(sphereShape);
-                    //sphereBody.position.set(i*20*spacingX-(width*(spacingX/2)),0,j*20*spacingX-(depth*(spacingZ/2)));
-                    sphereBody.position.set(i*5*spacingX-2000,0,j*5*spacingX-2000);
-                    comp.cannonBalls.push(sphereBody);
-                    comp.cannonWorld.addBody(sphereBody);
-                    
-                    // viasual
-                    var geom = new THREE.SphereGeometry(10, 8, 8);
-                    var mesh= new THREE.Mesh(geom, mat);
-                    //mesh.position.set(i*20*spacingX-(width*(spacingX/2)),0,j*20*spacingX-(depth*(spacingZ/2)));
-                    mesh.position.set(i*5*spacingX-2000,0,j*5*spacingX-2000);
-                    comp.sceneBalls.push(mesh);
-                    comp.scene.add(mesh);
-
-            }
-        }
     }
 
     private getHighPoint(geometry, face): number {
@@ -755,9 +741,9 @@ export class MainCSS3d {
         var v1 = geometry.vertices[face.a].y;
         var v2 = geometry.vertices[face.b].y;
         var v3 = geometry.vertices[face.c].y;
- 
+
         return Math.max(v1, v2, v3);
-     }
+    }
 
     private createCSSRenderer() {
         this.sceneCSS = new THREE.Scene();
@@ -771,11 +757,11 @@ export class MainCSS3d {
         this.htmlDivCanvas.appendChild(this.rendererCSS.domElement);
     }
 
-    private initPhysicWorld(){
+    private initPhysicWorld() {
         this.cannonWorld = new Cannon.World();
         this.cannonWorld.quatNormalizeSkip = 2;
         this.cannonWorld.quatNormalizeFast = true;
-        this.cannonWorld.gravity.set(0,-900,0);    // X, Y, Z direction // deal with timestep in render func
+        this.cannonWorld.gravity.set(0, 0, 0);    // X, Y, Z direction // deal with timestep in render func
         this.cannonWorld.broadphase = new Cannon.NaiveBroadphase(); // activate colliding bodies
         this.cannonWorld.solver.iterations = 10;
         this.cannonWorld.defaultContactMaterial.contactEquationRelaxation = 0.8;

@@ -29,10 +29,8 @@ Help:
         <!-- Angular Template reference variable '#': Use the hash symbol (#) to declare a reference variable.  -->
         
         <!-- canvas here -->
-        <div class="w3-center">
-            <canvas class="w3-center" #canvas (window:resize)="onResize()"></canvas>
-        </div>
-       
+        <canvas #canvas (window:resize)="onResize()"></canvas>
+               
         <!-- Setting UI -->
         <div class="w3-row">
             <!-- with two way binding with ngModule, we need here to import the FormsModule-->

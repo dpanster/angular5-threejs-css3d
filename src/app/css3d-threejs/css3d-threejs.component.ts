@@ -15,19 +15,19 @@ export class Css3dThreejsComponent implements AfterViewInit {
   @ViewChild('canvasCSS3d')
   private canvasRef: ElementRef;
 
-  private world:CSS3dWorld.MainCSS3d;
+  private world: CSS3dWorld.MainCSS3d;
 
 
-    /**
-   * get the css3d canvas
-   * 
-   * @readonly
-   * @private
-   * @type {HTMLDivElement}
-   * @memberof Css3dThreejsComponent
-   */
+  /**
+ * get the css3d canvas
+ * 
+ * @readonly
+ * @private
+ * @type {HTMLDivElement}
+ * @memberof Css3dThreejsComponent
+ */
   private get canvas(): HTMLDivElement {
-     return this.canvasRef.nativeElement;
+    return this.canvasRef.nativeElement;
   }
 
 
@@ -44,15 +44,20 @@ export class Css3dThreejsComponent implements AfterViewInit {
    * @memberof Css3dThreejsComponent
    */
   public ngAfterViewInit() {
-    this.world = new CSS3dWorld.MainCSS3d(this.canvas, 0.7);
+    this.world = new CSS3dWorld.MainCSS3d(this.canvas, 0.6);
+    // this.canvasRef.nativeElement.style.position = 'relative';
+
+    // let domCanvas:HTMLCanvasElement = document.querySelector("canvas");
+    // console.log(domCanvas);
+    // domCanvas.style.position = 'relative';
   }
-  
-  
+
+
   /* EVENTS */
-    /**
-     * Update scene after resizing. 
-     */
-    public onResize() {
-      this.world.onResize();
+  /**
+   * Update scene after resizing. 
+   */
+  public onResize() {
+    this.world.onResize();
   }
 }

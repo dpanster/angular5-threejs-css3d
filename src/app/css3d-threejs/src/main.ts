@@ -230,8 +230,8 @@ export class MainCSS3d {
         this.scene.add(this.pivotPoint);
 
         // Add different spheres with cannon shapes / bodies
-        for (var i = 1; i < 3; i++) {
-            for (var j = 1; j < 8; j++) {
+        for (var i = 1; i < 8; i++) {
+            for (var j = 1; j < 3; j++) {
                 let factor = Math.random() * 30 + 5;
                 console.log("factor: " + factor);
 
@@ -239,7 +239,7 @@ export class MainCSS3d {
                 var sphereShape = new Cannon.Sphere(factor);
                 var sphereBody = new Cannon.Body({ mass: factor });
                 sphereBody.addShape(sphereShape);
-                sphereBody.position.set(-450 + 140 * j, 70 * i+100, 20 * i * j - 150);
+                sphereBody.position.set(j*50, 100 * i, 20 * i * j - 150);
                 sphereBody.angularVelocity.set(0, factor / 100 * sign,0 );
                 sphereBody.quaternion.set(0.2, 0.5, 0, 1);
                 this.cannonBalls.push(sphereBody);
@@ -248,7 +248,7 @@ export class MainCSS3d {
                 // visual
                 var geom = new THREE.SphereGeometry(factor, 32, 32);
                 var mesh = new THREE.Mesh(geom, this.getMeshPhongMaterialFromTexture(Texture.GAS_GREEN));
-                mesh.position.set(-450 + 140 * j, 70 * i+100, 20 * i * j - 150);
+                mesh.position.set(j*50 , 100 * i, 20 * i * j - 150);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
                 this.sceneBalls.push(mesh);
