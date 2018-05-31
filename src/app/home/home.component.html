@@ -16,18 +16,30 @@
       <b>Note: This page is not responsive for mobile screens yet.</b>
     </p>
   </div>
-  <ul>
-    <li>Cube - Three.js</li>
-    <a routerLink="cube-threejs">
-      <!-- possible property binding
-        <img src="{{imgURL}}">
-        <img [src]="imgURL">
-      -->
-      <img [src]="imgURL_cube_threejs" alt="" height="150" width="150">
-    </a>
-    <li>CSS3D - Three.js</li>
-    <a routerLink="css3d-threejs">
-      <img [src]="imgURL_css3d_threejs" alt="" height="150" width="150">
-    </a>
-  </ul>
+
+  <!-- thumb naming-->
+  <div class="w3-row">
+    <div class="w3-col s3 w3-center">
+      <p>Cube - Three.js</p>
+    </div>
+    <div class="w3-col s3 w3-center">
+      <p>CSS3D - Three.js</p>
+    </div>
+    <div class="w3-col s6"></div>
+  </div>
+
+  <!--thumbs-->
+  <div class="w3-row">
+    <div class="w3-col s3 w3-center">
+      <a routerLink="cube-threejs">
+        <img [src]="imgURL_cube_threejs" alt="" height="150" width="150">
+      </a>
+    </div>
+    <div class="w3-col s3 w3-center">
+      <a routerLink="css3d-threejs">
+        <img [src]="imgURL_css3d_threejs" alt="" height="150" width="150">
+      </a>
+    </div>
+    <div class="w3-col s6"></div>
+  </div>
 </div>
