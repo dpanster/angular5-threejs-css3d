@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomeComponent implements OnInit {
 
-  public imgURL_cube_threejs = "/assets/screens/cube_threejs.jpg";
+  public imgURL_cube_threejs = "assets/screens/cube_threejs.jpg";
   public imgURL_css3d_threejs = "/assets/screens/css3d_threejs.jpg";
   constructor() { }
 
