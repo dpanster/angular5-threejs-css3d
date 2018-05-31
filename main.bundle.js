@@ -1221,8 +1221,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var HomeComponent = /** @class */ (function () {
     function HomeComponent() {
         // thumbnails
-        this.imgURL_cube_threejs = "assets/screens/cube_threejs.jpg";
-        this.imgURL_css3d_threejs = "assets/texture/css3d_threejs.jpg";
+        this.imgURL_cube_threejs = "assets/screens/thumb_cube_threejs.jpg";
+        this.imgURL_css3d_threejs = "assets/screens/thumb_css3d_threejs.jpg";
     }
     HomeComponent.prototype.ngOnInit = function () {
     };
