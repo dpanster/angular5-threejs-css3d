@@ -1198,7 +1198,7 @@ module.exports = module.exports.toString();
 /***/ "../../../../../src/app/home/home.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<!-- wrap w3 -->\n<div class=\"w3-container\">\n  <header>\n    <div class=\"w3-container \">\n      <h1>\n        <b>3D showcase examples set up on Angular 5, Three.js</b>\n      </h1>\n      Currently there is an example with rotating cubes and an example with a terrain, CSS3D and pysics developed.\n      <br> A small game included most features of the examples will be implemented...\n      <br>\n    </div>\n\n  </header>\n  <div class=\"w3-container\">\n    <p>\n      <b>Note: This page is not responsive for mobile screens yet.</b>\n    </p>\n  </div>\n  <ul>\n    <li>Cube - Three.js</li>\n    <a routerLink=\"cube-threejs\">\n      <!-- possible property binding\n        <img src=\"{{imgURL}}\">\n        <img [src]=\"imgURL\">\n      -->\n      <img [src]=\"imgURL_cube_threejs\" alt=\"\" height=\"150\" width=\"150\">\n    </a>\n    <li>CSS3D - Three.js</li>\n    <a routerLink=\"css3d-threejs\">\n      <img [src]=\"imgURL_css3d_threejs\" alt=\"\" height=\"150\" width=\"150\">\n    </a>\n  </ul>\n</div>"
+module.exports = "<!-- wrap w3 -->\n<div class=\"w3-container\">\n  <header>\n    <div class=\"w3-container \">\n      <h1>\n        <b>3D showcase examples set up on Angular 5, Three.js</b>\n      </h1>\n      Currently there is an example with rotating cubes and an example with a terrain, CSS3D and pysics developed.\n      <br> A small game included most features of the examples will be implemented...\n      <br>\n    </div>\n\n  </header>\n  <div class=\"w3-container\">\n    <p>\n      <b>Note: This page is not responsive for mobile screens yet.</b>\n    </p>\n  </div>\n  <ul>\n\n    <li>Cube - Three.js</li>\n    <a routerLink=\"cube-threejs\">\n      <img [src]=\"imgURL_cube_threejs\" alt=\"\" height=\"150\" width=\"150\">\n    </a>\n    \n    <li>CSS3D - Three.js</li>\n    <a routerLink=\"css3d-threejs\">\n      <img [src]=\"imgURL_css3d_threejs\" alt=\"\" height=\"150\" width=\"150\">\n    </a>\n  </ul>\n</div>"
 
 /***/ }),
 
@@ -1220,8 +1220,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 var HomeComponent = /** @class */ (function () {
     function HomeComponent() {
+        // thumbnails
         this.imgURL_cube_threejs = "assets/texture/cube_threejs.jpg";
-        this.imgURL_css3d_threejs = "/assets/texture/css3d_threejs.jpg";
+        this.imgURL_css3d_threejs = "assets/texture/css3d_threejs.jpg";
     }
     HomeComponent.prototype.ngOnInit = function () {
     };
