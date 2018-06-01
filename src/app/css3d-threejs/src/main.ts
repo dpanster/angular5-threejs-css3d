@@ -59,6 +59,7 @@ export class MainCSS3d {
     private timestep: number = 1 / 60;
     private bPhysicsOn: boolean = false;
     private cannonBalls: Array<Cannon.Body> = [];
+    private cannonBallsBodyPosOrigin: Array<Cannon.Vec3> = [];
 
     /**
      * Creates an instance of MainCSS3d.
@@ -233,14 +234,17 @@ export class MainCSS3d {
         for (var i = 1; i < 8; i++) {
             for (var j = 1; j < 3; j++) {
                 let factor = Math.random() * 30 + 5;
-                console.log("factor: " + factor);
+                //console.log("factor: " + factor);
 
                 let sign: number = (factor > 20) ? +1 : -1; // positive or negative
-                var sphereShape = new Cannon.Sphere(factor);
-                var sphereBody = new Cannon.Body({ mass: factor });
+                let sphereShape = new Cannon.Sphere(factor);
+                let sphereBody = new Cannon.Body({ mass: factor });
                 sphereBody.addShape(sphereShape);
-                sphereBody.position.set(j*50, 100 * i, 20 * i * j - 150);
-                sphereBody.angularVelocity.set(0, factor / 100 * sign,0 );
+                sphereBody.position.set(j * 50, 100 * i, 20 * i * j - 150);
+                //cpyCanBallPosOrig.push(sphereBody.position);
+                this.cannonBallsBodyPosOrigin.push(new Cannon.Vec3(sphereBody.position.x, sphereBody.position.y, sphereBody.position.z));
+                
+                sphereBody.angularVelocity.set(0, factor / 100 * sign, 0);
                 sphereBody.quaternion.set(0.2, 0.5, 0, 1);
                 this.cannonBalls.push(sphereBody);
                 this.cannonWorld.addBody(sphereBody);
@@ -248,7 +252,7 @@ export class MainCSS3d {
                 // visual
                 var geom = new THREE.SphereGeometry(factor, 32, 32);
                 var mesh = new THREE.Mesh(geom, this.getMeshPhongMaterialFromTexture(Texture.GAS_GREEN));
-                mesh.position.set(j*50 , 100 * i, 20 * i * j - 150);
+                mesh.position.set(j * 50, 100 * i, 20 * i * j - 150);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
                 this.sceneBalls.push(mesh);
@@ -256,8 +260,6 @@ export class MainCSS3d {
 
             }
         }
-
-
     }
 
     private addHelpers() {
@@ -427,34 +429,49 @@ export class MainCSS3d {
                     case "elem_5":  //reset physic objects
                         // everytime do the same sequential steps
                         document.getElementById(this.id).className = "elementClick";
-                        
+
                         component.cannonWorld.gravity.set(0, 0, 0);  // gravity off
 
                         document.getElementById("elem_1").className = "element";
                         component.bPhysicsOn = false;
 
-                        // tween objects upwards
-                        component.tweenPhysicObjects = new TWEEN.Tween({ yPos: 0 })
-                            .to({yPos: 250}, 2000)
-                            .onUpdate(function () {                            
-                                for (let i = 0; i < component.cannonBalls.length; i++) {
-                                    component.sceneBalls[i].position.y = component.cannonBalls[i].position.y = this.yPos;
-                                }
+                        // tween sphere objects to origin
+                        for (let i = 0; i < component.cannonBalls.length; i++) {
+                            //console.log("i: " + i + ", component.cannonBallsBodyPosOrigin[i]: " + component.cannonBallsBodyPosOrigin[i]);
+
+                            // stop translation velocity
+                            //component.cannonBalls[i].quaternion.set(0,0,0,0);
+                            component.cannonBalls[i].velocity.set(0,0,0);
+                            component.cannonBalls[i].initVelocity.set(0,0,0);
+                            
+                            // set tween
+                            component.tweenPhysicObjects = new TWEEN.Tween({ 
+                                    xPos: component.cannonBalls[i].position.x,
+                                    yPos: component.cannonBalls[i].position.y,
+                                    zPos: component.cannonBalls[i].position.z
+                                })
+                                .to({
+                                    xPos: component.cannonBallsBodyPosOrigin[i].x,
+                                    yPos: component.cannonBallsBodyPosOrigin[i].y,
+                                    zPos: component.cannonBallsBodyPosOrigin[i].z
+                                }, 2000)
+                                .onUpdate(function () {
+                                    //console.log("this.yPos: " + this.yPos + ", component.cannonBalls[i].position.y: " + component.cannonBalls[i].position.y);
+                                    component.cannonBalls[i].position = new Cannon.Vec3(this.xPos, this.yPos, this.zPos) ;
+                                })
+                                .start();
+                        }
+                        // tween CSS 3d element
+                        let targetPosZ = (component.sceneCSS.getObjectByName("elem_5").position.z === 0) ? 150 : 0;
+                        component.tweenPhysicCSSElem = new TWEEN.Tween({ zPos: component.sceneCSS.getObjectByName("elem_5").position.z })
+                            .to({ zPos: targetPosZ }, 1000)
+                            .onUpdate(function () {
+                                component.sceneCSS.getObjectByName("elem_5").position.z = this.zPos;
                             })
-                            .onComplete(function(){
+                            .onComplete(function () {
                                 document.getElementById("elem_5").className = "element";
                             })
                             .start();
-
-                        // tween CSS 3d element
-                        let targetPosZ = (component.sceneCSS.getObjectByName("elem_5").position.z === 0)? 150 : 0;
-                        component.tweenPhysicCSSElem = new TWEEN.Tween({ zPos: component.sceneCSS.getObjectByName("elem_5").position.z })
-                        .to({zPos: targetPosZ}, 1000)
-                        .onUpdate(function () {                            
-                            component.sceneCSS.getObjectByName("elem_5").position.z = this.zPos;
-                        })
-                        .start();
-
                         break;
                     default:
                         console.log(this.id + " not configured");
@@ -476,14 +493,14 @@ export class MainCSS3d {
 
             var details = document.createElement('div');
             details.className = 'details';
-            details.innerHTML = (i==5)? liTxt[i - 1] : "Toggle<br>" + liTxt[i - 1];
+            details.innerHTML = (i == 5) ? liTxt[i - 1] : "Toggle<br>" + liTxt[i - 1];
             element.appendChild(details);
 
-            let object:CSS3DRenderer.CSS3DObject = new CSS3DRenderer.CSS3DObject(element);
+            let object: CSS3DRenderer.CSS3DObject = new CSS3DRenderer.CSS3DObject(element);
             object.position.x = menuPosX + (-100 * i);
             object.position.y = 200;
-            object.name = "elem_"+i;
-           // object.userData = {id: "elem_"+i};
+            object.name = "elem_" + i;
+            // object.userData = {id: "elem_"+i};
             this.sceneCSS.add(object);
         }
 
