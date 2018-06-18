@@ -2,11 +2,12 @@
 3D showcase examples set up on Angular 5, Three.js
 ==================================================
 
-* Currently there is an example with rotating cubes and an example with a terrain, CSS3D and pysics developed.
-![alt text](/src/assets/screens/thumb_css3d_threejs.jpg "CSS3d, Threejs + Terrain")
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
-
-
+* There is an example with rotating cubes:
+    <img src="/src/assets/screens/thumb_cube_threejs.jpg" width="75" title="Threejs Cubes">
+* An example with a terrain, CSS3D and pysics:
+    ![alt text](/src/assets/screens/thumb_css3d_threejs.jpg "CSS3d, Threejs + Terrain" | width="75")
+* An example for an image galery in CSS3d:
+    <TODO>
 * A small game included most features of the examples will be implemented...
   
 --------------------
