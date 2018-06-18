@@ -3,9 +3,9 @@
 ==================================================
 
 * There is an example with rotating cubes:<br>
-    <center><img src="/src/assets/screens/thumb_cube_threejs.jpg" width="80" title="Threejs Cubes"></center>
-* An example with a terrain, CSS3D and pysics:
-    <center><img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain"></center>
+    <p><img src="/src/assets/screens/thumb_cube_threejs.jpg" width="80" title="Threejs Cubes"></p>
+* An example with a terrain, CSS3D and pysics:<br>
+    <p><img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain"></p>
 * An example for an image galery in CSS3d:
     <TODO>
 * A small game included most features of the examples will be implemented...
