@@ -3,10 +3,10 @@
 ==================================================
 
 * There is an example with rotating cubes:<br>
-    <p><img src="/src/assets/screens/thumb_cube_threejs.jpg" width="80" title="Threejs Cubes"></p>
-* An example with a terrain, CSS3D and pysics:<br>
-    <p><img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain"></p>
-* An example for an image galery in CSS3d:
+    <img src="/src/assets/screens/thumb_cube_threejs.jpg" width="80" title="Threejs Cubes">
+* An example with a terrain, CSS3D and physics:<br>
+    <img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain">
+* An example for an image galery in CSS3d:<br>
     <TODO>
 * A small game included most features of the examples will be implemented...
   
