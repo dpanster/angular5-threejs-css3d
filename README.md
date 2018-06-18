@@ -3,9 +3,13 @@
 ==================================================
 
 * There is an example with rotating cubes:<br>
-    <img src="/src/assets/screens/thumb_cube_threejs.jpg" width="80" title="Threejs Cubes">
+    <a href="https://dpanster.github.io/angular5-threejs-css3d/cube-threejs/">
+        <img src="/src/assets/screens/thumb_cube_threejs.jpg" width="80" title="Threejs Cubes">
+    </a>
 * An example with a terrain, CSS3D and physics:<br>
-    <img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain">
+    <a href="https://dpanster.github.io/angular5-threejs-css3d/css3d-threejs">
+        <img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain">
+    </a>
 * An example for an image galery in CSS3d:<br>
     <TODO>
 * A small game included most features of the examples will be implemented...
