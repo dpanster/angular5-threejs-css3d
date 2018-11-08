@@ -18,7 +18,7 @@
     </div>
     -->
     <!-- Folder Picker (support by chrome, edge, firefox) -->
-    <input id="imgFolderInput" type="file" (change)="filesPicked(folderInput.files)" webkitDirectory>
+    <input id="imgFolderInput" #imgFolderInputNG type="file" (change)="filesPicked(imgFolderInputNG.files)" webkitDirectory>
 
   </div>
 </div>
