@@ -45,6 +45,7 @@ export class Css3dThreejsComponent implements AfterViewInit {
    */
   public ngAfterViewInit() {
     this.world = new CSS3dWorld.MainCSS3d(this.canvas, 0.6);
+    
     // this.canvasRef.nativeElement.style.position = 'relative';
 
     // let domCanvas:HTMLCanvasElement = document.querySelector("canvas");

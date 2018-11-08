@@ -4,6 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { CubeThreejsComponent } from './cube-threejs/cube-threejs.component';
 import { Css3dThreejsComponent } from './css3d-threejs/css3d-threejs.component';
+import { ImgGalleryComponent } from './img-gallery/img-gallery.component';
 
 const routes: Routes = [
   {
@@ -17,6 +18,10 @@ const routes: Routes = [
   {
       path: 'css3d-threejs',
       component: Css3dThreejsComponent
+  },
+  {
+      path: 'img-gallery',
+      component: ImgGalleryComponent
   }
 ];
 

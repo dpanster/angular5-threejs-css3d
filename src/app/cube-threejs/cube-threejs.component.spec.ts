@@ -1,4 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
 
 import { CubeThreejsComponent } from './cube-threejs.component';
 
@@ -8,9 +9,9 @@ describe('CubeThreejsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CubeThreejsComponent ]
-    })
-    .compileComponents();
+      declarations: [CubeThreejsComponent],
+      imports: [FormsModule]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

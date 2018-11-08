@@ -7,6 +7,7 @@ import { AppComponent } from './app.component';
 import { CubeThreejsComponent } from './cube-threejs/cube-threejs.component';
 import { HomeComponent } from './home/home.component';
 import { Css3dThreejsComponent } from './css3d-threejs/css3d-threejs.component';
+import { ImgGalleryComponent } from './img-gallery/img-gallery.component';
 
 
 @NgModule({
@@ -14,7 +15,8 @@ import { Css3dThreejsComponent } from './css3d-threejs/css3d-threejs.component';
     AppComponent,
     CubeThreejsComponent,
     HomeComponent,
-    Css3dThreejsComponent
+    Css3dThreejsComponent,
+    ImgGalleryComponent
   ],
   imports: [
     BrowserModule,

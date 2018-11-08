@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+
 import * as THREE from 'three';
 
 // import loacl ts files: https://www.typescriptlang.org/docs/handbook/namespaces-and-modules.html
