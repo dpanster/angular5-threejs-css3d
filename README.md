@@ -10,18 +10,18 @@
     <a href="https://dpanster.github.io/angular5-threejs-css3d/css3d-threejs">
         <img src="/src/assets/screens/thumb_css3d_threejs.jpg" width="80" title="CSS3d, Threejs + Terrain">
     </a>
-* An example for an image galery in CSS3d:<br>
+* An example for an image gallery in CSS3d:<br>
     <a href="https://dpanster.github.io/angular5-threejs-css3d/img-gallery">
         <img src="/src/assets/screens/thumb_img_gallery_threejs.jpg" width="80" title="Image Gallery, Threejs + CSS3d">
     </a>
-* A small game included most features of the examples will be implemented...
+* A small game included most features of the examples will be implemented... see
   
 --------------------
 # access to published page
 https://dpanster.github.io/angular5-threejs-css3d/
 
 ==================================================
-# Versions:
+# Installed versions:
 
 Angular CLI: 6.0.0-rc.4  
 Node: 8.11.3  

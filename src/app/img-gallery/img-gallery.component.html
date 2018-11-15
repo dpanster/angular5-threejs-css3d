@@ -2,23 +2,37 @@
 <div class="w3-container">
   <header>
     <div class="w3-container ">
-      desc here
+      <h1>
+        <b>A Three.js - CSS3d showcase for an image gallery...</b>
+      </h1>
+      Here you see an image gallery based on css3d. The photos you see are from the default <em>assets/galleries</em>
+      folder.<br>
+      On the top left within the canvas you can choose a folder with images to load from. (Note: In some browsers the
+      <em>webkitDirectory</em> picker may not work :/ .)<br>
+      On the top right you can choose the presentation layout of the image gallery.
+      <br>
+      <br>
     </div>
   </header>
   <div class="w3-container">
-    <!--<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js css3d</a> - periodic table. <a
-        href="https://plus.google.com/113862800338869870683/posts/QcFk5HrWran" target="_blank" rel="noopener">info</a>.</div>-->
-
-    <div #canvasImgGal (window:resize)="onResize()"></div>
-    <!--<div id="imgMainMenu">
-      <button id="table">TABLE</button>
-      <button id="sphere">SPHERE</button>
-      <button id="helix">HELIX</button>
-      <button id="grid">GRID</button>
-    </div>
-    -->
     <!-- Folder Picker (support by chrome, edge, firefox) -->
-    <input id="imgFolderInput" #imgFolderInputNG type="file" (change)="filesPicked(imgFolderInputNG.files)" webkitDirectory>
+    <!--<input id="imgFolderInput" #imgFolderInputNG type="file" (change)="filesPicked(imgFolderInputNG.files)"
+      webkitDirectory>-->
 
+    Load Full Gallery (~25 MB) <input #id_tglFullDefGal (change)="toggleLoadFullDefGal(id_tglFullDefGal.checked)" type="checkbox">
+
+    <!-- fixed main layout menu-->
+    <div class="imgMainMenu">
+      <button (click)="addOtherStuff($event)">Random</button>
+      <!-- <button id="sphere">SPHERE</button> -->
+      <!-- <button id="helix">HELIX</button> -->
+      <!-- <button id="grid">GRID</button> -->
+    </div>
+
+    <!-- the canvas-->
+    <div id="canvasImgGal" #canvasImgGal (window:resize)="onResize()"></div>
   </div>
+
+
+
 </div>

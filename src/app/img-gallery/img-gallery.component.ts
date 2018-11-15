@@ -12,7 +12,7 @@ import { Img3D } from "./src/Img3D";
  * @description Main component class for the image gallery example.
  * It uses self created classes for webgl, css3d renderer.
  *
- * @export
+ * @exportll
  * @class ImgGalleryComponent
  * @implements {AfterViewInit}
  */
@@ -28,8 +28,11 @@ export class ImgGalleryComponent implements AfterViewInit {
   @ViewChild('canvasImgGal')
   private canvasRef: ElementRef;
 
-  @ViewChild('info')
-  private info: ElementRef;
+  @ViewChild('btnRandom')
+  private btnRandom_Ref: ElementRef;
+
+
+
 
   /**
    * @private Members of this class
@@ -49,7 +52,7 @@ export class ImgGalleryComponent implements AfterViewInit {
    * @memberof ImgGalleryComponent
    */
   ngAfterViewInit(): void {
-    this.webGl = new Img3D(this.canvasRef.nativeElement, 1.0);
+    this.webGl = new Img3D(this.canvasRef.nativeElement, 0.8);
     console.log("OK");
 
   }
@@ -76,14 +79,24 @@ export class ImgGalleryComponent implements AfterViewInit {
   }
 
 
-  public filesPicked(files) {
+  public filesPicked(files: any) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const path = file.webkitRelativePath.split('/');
-      console.log("file " + i + ": " + path);    
+      console.log("file " + i + ": " + path);
     }
 
     this.webGl.removeObj();
 
+  }
+
+  public addOtherStuff($event: any) {
+    //this.webGl.removeObj();
+    //this.webGl.loadDefaultImagesToCssScene(46);
+  }
+
+  public toggleLoadFullDefGal(textured: boolean) {
+    this.webGl.removeObj();
+    this.webGl.loadDefaultImagesToCssScene((textured) ? 46 : 5);
   }
 }

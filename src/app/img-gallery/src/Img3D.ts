@@ -77,20 +77,20 @@ export class Img3D {
         // 3. set up scene in webGl + renderer
         /*** init scene */
         this.sceneWebGL = new THREE.Scene();
-        const material = new THREE.MeshBasicMaterial();
-        material.color.set('green');
-        material.opacity = 0;
-        material.blending = THREE.NoBlending;
+        // const material = new THREE.MeshBasicMaterial();
+        // material.color.set('green');
+        // material.opacity = 0;
+        // material.blending = THREE.NoBlending;
         // any mesh using this material will act as a see-thru to the css renderer
-        const cube = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), material);
-        this.sceneWebGL.add(cube);
+        //const cube = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), material);
+        //this.sceneWebGL.add(cube);
         /**** */
         this.createRendererWebGL();
 
 
         // 4. set renderers
         this.rendererWebGL.render(this.sceneWebGL, this.camera);
-        this.rendererCSS.render( this.sceneCSS, this.camera );
+        this.rendererCSS.render(this.sceneCSS, this.camera);
 
 
         // add various things
@@ -220,7 +220,7 @@ export class Img3D {
             1,
             10000
         );
-        this.camera.position.set(0, 200, 400);
+        this.camera.position.set(0, 200, 1000);
 
     }
 
@@ -240,7 +240,7 @@ export class Img3D {
         this.rendererWebGL.setSize(window.innerWidth * this.scrProp.scrSize, window.innerHeight * this.scrProp.scrSize);
 
         this.rendererWebGL.domElement.style.position = 'absolute'; // required
-        this.rendererWebGL.domElement.style.top = '0px';
+        //this.rendererWebGL.domElement.style.top = '0px';
         this.rendererWebGL.domElement.style.zIndex = '1'; // required
 
         this.htmlDivCanvas.appendChild(this.rendererWebGL.domElement);
@@ -251,18 +251,60 @@ export class Img3D {
         this.rendererCSS = new CSS3DRenderer.CSS3DRenderer();
         this.rendererCSS.setSize(window.innerWidth * this.scrProp.scrSize, window.innerHeight * this.scrProp.scrSize);
         this.rendererCSS.domElement.style.position = 'absolute';
-        this.rendererCSS.domElement.style.top = '0px';
+        //this.rendererCSS.domElement.style.top = '0px';
         this.rendererCSS.domElement.style.zIndex = '2'; // required
         this.htmlDivCanvas.appendChild(this.rendererCSS.domElement);
     }
 
     private initiateCSS3dScene() {
-        // img properties
         this.sceneCSS = new THREE.Scene();
+
+        // create image gallery main menu with buttons, refer to .css
+        // let imgMenu = document.createElement('div');
+        // imgMenu.className = 'imgMainMenu';
+
+        // let btnLayout =  document.createElement('button');
+        // btnLayout.textContent = 'textContent';
+        // btnLayout.addEventListener('click', function (event) {
+        //     console.log('clicked button');
+        // }, false);
+
+        // imgMenu.appendChild(btnLayout);
+        // this.sceneCSS.add(new CSS3DRenderer.CSS3DObject(imgMenu));
+
+        //     <div id="imgMainMenu">
+        //     <button id="table">TABLE</button>
+        //     <button id="sphere">SPHERE</button>
+        //     <button id="helix">HELIX</button>
+        //     <button id="grid">GRID</button>
+        //   </div>
+
+        // add images
+        this.loadDefaultImagesToCssScene(5);
+
+        // add fixex css3d menu
+        // const element = document.createElement('div');
+        // element.innerHTML = 'Toggle<br>';
+        // element.style.position = 'absolute';
+        // element.style.bottom = '20px';
+        // element.style.color = 'yellow';
+        // const object: CSS3DRenderer.CSS3DObject = new CSS3DRenderer.CSS3DObject(element);
+        // this.sceneCSS.add(object);
+
+        // Light
+        // let spotLight = new THREE.SpotLight(0xaaaaaa);
+        // spotLight.position.set(0, 15, 0);
+        // spotLight.castShadow = true;
+        // scCSS.add(spotLight);
+    }
+
+
+    public loadDefaultImagesToCssScene(nImages: number): any {
         let scCSS = this.sceneCSS;  // scCSS referenced 'this' to the image function, this is the workaround
 
         // load the default gallery images into CSS3DObjects
-        for (let i = 1; i <= 72; i++) {
+        // (load 5 images by default... the other 41 default images can be loaded after clicking "load all images")
+        for (let i = 1; i <= nImages; i++) {
             let img = new Image();
             img.src = 'assets/galleries/example (' + i + ').jpg';
 
@@ -279,12 +321,12 @@ export class Img3D {
                 let photo = document.createElement('img');
                 photo.src = th.src;
 
-                console.log(parseInt(th.width, 10) / 10);
-                console.log(parseInt(th.height, 10) / 10);
+                console.log(parseInt(th.width, 10) / 1);
+                console.log(parseInt(th.height, 10) / 1);
 
                 // neccessary
-                photo.width = parseInt(th.width, 10) / 10;//th.width.valueOf;
-                photo.height = parseInt(th.height, 10) / 10;//th.height.valueOf;
+                photo.width = parseInt(th.width, 10) / 1;//th.width.valueOf;
+                photo.height = parseInt(th.height, 10) / 1;//th.height.valueOf;
 
                 // set an event listener
                 el.addEventListener('click', function (event) {
@@ -295,28 +337,13 @@ export class Img3D {
 
                 el.appendChild(photo);
                 let k = new CSS3DRenderer.CSS3DObject(el);
-                k.position.y = Math.random() * 1000;
-                k.position.z = Math.random() * 1000;
-                k.position.x = Math.random() * 1000;
+                k.position.y = Math.random() * 3000;
+                k.position.z = (Math.random() * 6500)-6000;
+                k.position.x = (Math.random() * 5000)-1000;
                 scCSS.add(k);
                 console.log('CSS img added: ' + photo.src);
             }
         }
-
-        // add fixex css3d menu
-        // const element = document.createElement('div');
-        // element.innerHTML = 'Toggle<br>';
-        // element.style.position = 'absolute';
-        // element.style.bottom = '20px';
-        // element.style.color = 'yellow';
-        // const object: CSS3DRenderer.CSS3DObject = new CSS3DRenderer.CSS3DObject(element);
-        // this.sceneCSS.add(object);
-
-        // Light
-        // let spotLight = new THREE.SpotLight(0xaaaaaa);
-        // spotLight.position.set(0, 15, 0);
-        // spotLight.castShadow = true;
-        // scCSS.add(spotLight);
     }
 
     /**
