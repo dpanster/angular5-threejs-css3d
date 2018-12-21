@@ -7,6 +7,12 @@ import * as Perlin from 'perlin-noise';
 import * as Chroma from 'chroma-js';
 import * as Cannon from 'cannon';
 
+
+/**
+ *
+ *
+ * @enum {number}
+ */
 enum Texture {
     BRICK = "assets/texture/Bricks.jpg",
     GAS_BRIGHT = "assets/texture/Gaseous_Bright.jpg",

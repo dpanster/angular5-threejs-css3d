@@ -1,6 +1,8 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-import * as THREE from 'three';
-import { Img3D } from "./src/Img3D";
+import {HostListener} from '@angular/core';
+import { Img3D } from './src/Img3D';
+import { E_ARRANGEMENT } from './src/Img3D';
+
 
 @Component({
   selector: 'app-img-gallery',
@@ -18,7 +20,7 @@ import { Img3D } from "./src/Img3D";
  */
 export class ImgGalleryComponent implements AfterViewInit {
 
-  /** 
+  /**
    *
    *
    * @private
@@ -28,16 +30,52 @@ export class ImgGalleryComponent implements AfterViewInit {
   @ViewChild('canvasImgGal')
   private canvasRef: ElementRef;
 
-  @ViewChild('btnRandom')
-  private btnRandom_Ref: ElementRef;
+  @ViewChild('btnGrid')
+  private btnGrid_Ref: ElementRef;
+
+  @ViewChild('id_spnShowGrid')
+  private spnShowGrid_Ref: ElementRef;
+
+  @ViewChild('id_spnRangeGridCols')
+  private spnRangeGridCols_Ref: ElementRef;
 
 
+  @HostListener('document:keyup', ['$event'])
+  onKeyUp(ev: KeyboardEvent) {
+    // console.log(`The user just released ${ev.key}!`);
+    this.webGl.setKeyPressed('none');
+  }
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(ev: KeyboardEvent) {
+    // console.log(`The user just pressed ${ev.key}!`);
+    this.webGl.setKeyPressed(ev.key);
+  }
+
+
+
+
+  /**
+   * @description Hold the arrangement types in enum.
+   *
+   * @memberof ImgGalleryComponent
+   */
+  eArrgmt = E_ARRANGEMENT;
 
 
   /**
    * @private Members of this class
    */
   private webGl: Img3D;
+
+
+  /**
+   * Option settings
+   *
+   * @private
+   * @type {boolean}
+   * @memberof ImgGalleryComponent
+   */
+  private bShowGrid = false;
 
   /**
    *Creates an instance of ImgGalleryComponent.
@@ -53,13 +91,15 @@ export class ImgGalleryComponent implements AfterViewInit {
    */
   ngAfterViewInit(): void {
     this.webGl = new Img3D(this.canvasRef.nativeElement, 0.8);
-    console.log("OK");
 
+    // set gui state:
+    this.btnGrid_Ref.nativeElement.focus();
+    console.log('OK');
   }
 
   /**
   * get the canvas element
-  * 
+  *
   * @readonly
   * @private
   * @type {HTMLDivElement}
@@ -71,7 +111,7 @@ export class ImgGalleryComponent implements AfterViewInit {
 
   /**
    * @event
-   * @description Update scene after resizing. 
+   * @description Update scene after resizing.
    * @memberof ImgGalleryComponent
    */
   public onResize() {
@@ -83,20 +123,87 @@ export class ImgGalleryComponent implements AfterViewInit {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const path = file.webkitRelativePath.split('/');
-      console.log("file " + i + ": " + path);
+      console.log('file ' + i + ': ' + path);
     }
 
-    this.webGl.removeObj();
+    this.webGl.removeImgObj();
 
   }
 
-  public addOtherStuff($event: any) {
-    //this.webGl.removeObj();
-    //this.webGl.loadDefaultImagesToCssScene(46);
+  public arrangeGallery(eBtnArrgmt: E_ARRANGEMENT) {
+    console.log(`switch from ${this.webGl.getArrangement()} to: ${eBtnArrgmt}`);
+
+    // reload if state is not same as before, except random arrangement
+    if (eBtnArrgmt !== this.webGl.getArrangement() || eBtnArrgmt === E_ARRANGEMENT.RANDOM) {
+      // no need to load images again.. only arrange.
+      this.webGl.setArrangement(eBtnArrgmt);
+      this.webGl.arrangeImageScene();
+
+      // delete the grid and create new
+      this.webGl.removeGrid();
+      this.webGl.loadLineGrid();  // the loadGrid() has access to the private E_ARRANGEMENT variable of Img3D instance
+      this.toggleShowGrid(this.bShowGrid);
+    }
+
+    // show hide options depend on arrangement
+    if (eBtnArrgmt === E_ARRANGEMENT.RANDOM) {
+      this.spnShowGrid_Ref.nativeElement.style.display = 'none';
+      this.spnRangeGridCols_Ref.nativeElement.style.display = 'none';
+    } else {
+      this.spnShowGrid_Ref.nativeElement.style.display = 'initial';
+      this.spnRangeGridCols_Ref.nativeElement.style.display = 'initial';
+    }
   }
 
-  public toggleLoadFullDefGal(textured: boolean) {
-    this.webGl.removeObj();
-    this.webGl.loadDefaultImagesToCssScene((textured) ? 46 : 5);
+  public arrangeDefault(e: any) {
+    console.log(e);
   }
+
+  public toggleLoadFullDefGal(bLoadMax: boolean) {
+    // add images
+    this.webGl.removeImgObj();
+    this.webGl.loadImageScene(true, bLoadMax, this.webGl.getArrangement());
+
+    // add grid
+    this.webGl.removeGrid();
+    this.webGl.loadLineGrid();
+    this.toggleShowGrid(this.bShowGrid);
+  }
+
+  /**
+   * toggleShowGrid
+   */
+  public toggleShowGrid(bShowGrid: boolean) {
+    this.webGl.showGrid(bShowGrid);
+    this.bShowGrid = bShowGrid;
+  }
+
+  public toggleCamYawCtrl(bCamYawCtrl: boolean) {
+    this.webGl.toggleCamYawCtrl(bCamYawCtrl);
+  }
+  public toggleCamPitchCtrl(bCamPitchCtrl: boolean) {
+    this.webGl.toggleCamPitchCtrl(bCamPitchCtrl);
+  }
+
+  /**
+   * changeSldNumOfCols
+   */
+  public changeSldNumOfCols(value: any) {
+    this.webGl.setNewGridColSize(Number(value));
+    this.webGl.arrangeImageScene();
+    // delete the grid and create new
+    this.webGl.removeGrid();
+    this.webGl.loadLineGrid();
+    this.webGl.showGrid(this.bShowGrid);
+  }
+
+  public resetPerspective() {
+    // this.webGl.resetPerspective();
+  }
+
+  public onKey(e: any) {
+    const keyCode = e.which;
+    console.log('Pressing Key: ' + keyCode);
+  }
+
 }

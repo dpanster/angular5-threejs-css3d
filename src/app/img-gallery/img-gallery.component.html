@@ -5,32 +5,63 @@
       <h1>
         <b>A Three.js - CSS3d showcase for an image gallery...</b>
       </h1>
+      <b>Note: This page is not responsive for mobile screens yet.</b><br>
       Here you see an image gallery based on css3d. The photos you see are from the default <em>assets/galleries</em>
       folder.<br>
-      On the top left within the canvas you can choose a folder with images to load from. (Note: In some browsers the
-      <em>webkitDirectory</em> picker may not work :/ .)<br>
-      On the top right you can choose the presentation layout of the image gallery.
+      Above the canvas you can download the full gallery, if you want. On the top left within the canvas you have
+      options for each arrangement.<br>
+      Hovering (in front of camera) on image show few Exif information.<br>
+      <!--You can choose a folder with images to load from. (Note: In some browsers the
+      <em>webkitDirectory</em> picker may not work :/ .)<br>-->
+      On the left in the menu you can choose an arrangement of the images. Below that you find some gloabl options.<br>
       <br>
+      <em>... implementation not finished yet.</em>
       <br>
     </div>
   </header>
   <div class="w3-container">
     <!-- Folder Picker (support by chrome, edge, firefox) -->
-    <!--<input id="imgFolderInput" #imgFolderInputNG type="file" (change)="filesPicked(imgFolderInputNG.files)"
-      webkitDirectory>-->
+    <!-- <p> Choose your own gallery folder:
+      <input #imgFolderInputNG type="file" (change)="filesPicked(imgFolderInputNG.files)" webkitDirectory>
+    </p> -->
 
-    Load Full Gallery (~25 MB) <input #id_tglFullDefGal (change)="toggleLoadFullDefGal(id_tglFullDefGal.checked)" type="checkbox">
+    <p> Download Full Gallery (~25 MB):
+      <input #id_tglFullDefGal (change)="toggleLoadFullDefGal(id_tglFullDefGal.checked)" type="checkbox">
+    </p>
+
 
     <!-- fixed main layout menu-->
     <div class="imgMainMenu">
-      <button (click)="addOtherStuff($event)">Random</button>
-      <!-- <button id="sphere">SPHERE</button> -->
-      <!-- <button id="helix">HELIX</button> -->
-      <!-- <button id="grid">GRID</button> -->
+      <p id="menuTitle">Choose arrangement:</p>
+      <button class="menuMainElement" #btnGrid (click)="arrangeGallery(eArrgmt.GRID)">Grid</button><br>
+      <!-- <button class="menuMainElement" (click)="arrangeGallery(eArrgmt.TUBE)">Tube</button><br> -->
+      <!-- <button class="menuMainElement" (click)="arrangeGallery(eArrgmt.CUBE)">Cube</button><br> -->
+      <button class="menuMainElement" (click)="arrangeGallery(eArrgmt.RANDOM)">Random</button><br>
+      <p id="menuTitle">Global settings:</p>
+      <span class="menuMainElement menuChkBx"><input #id_tglCamYawCtrl (change)="toggleCamYawCtrl(id_tglCamYawCtrl.checked)"
+          type="checkbox" checked> Cam yaw control</span><br>
+      <span class="menuMainElement menuChkBx"><input #id_tglCamPitchCtrl (change)="toggleCamPitchCtrl(id_tglCamPitchCtrl.checked)"
+          type="checkbox" unchecked> Cam pitch control</span><br>
+      <!-- <button class="menuMainElement" (click)="resetPerspective()">Reset perspective</button> -->
+    </div>
+
+    <!-- fixed main layout menu-->
+    <div class="imgSubMenu">
+      <p id="menuTitle">Arrangement options:</p>
+      <!--Use [ngStyle]= / [style.X]= -->
+      <!--<span [style.display]="gggggetHideState()" class="menuSubElement">Show Line Grid <input #id_tglShowGrid (change)="toggleShowGrid(id_tglShowGrid.checked)" type="checkbox" unchecked></span><br>-->
+      <!-- use the id / view child reference-->
+      <p #id_spnShowGrid class="menuSubElement">
+        <input #id_tglShowGrid (change)="toggleShowGrid(id_tglShowGrid.checked)" type="checkbox" unchecked>
+        Show Line Grid
+      </p>
+      <p #id_spnRangeGridCols class="menuSubElement" style="color: rgba(146, 255, 127, 0.75);">No. of columns: {{id_sldRangeGridCols.value}}<br>
+        <input #id_sldRangeGridCols (change)="changeSldNumOfCols(id_sldRangeGridCols.value)" type="range" min="1" max="10" value="4" class="slider">
+      </p>
     </div>
 
     <!-- the canvas-->
-    <div id="canvasImgGal" #canvasImgGal (window:resize)="onResize()"></div>
+    <div id="canvasImgGal" #canvasImgGal (window:resize)="onResize()" (keyup)="onKey($event)"></div>
   </div>
 
 

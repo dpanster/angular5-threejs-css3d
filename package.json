@@ -31,6 +31,7 @@
     "cannon": "^0.6.1",
     "chroma-js": "^1.3.7",
     "core-js": "^2.4.1",
+    "exif-js": "^2.3.0",
     "file-system": "^2.2.2",
     "filelist_reader": "^1.0.2",
     "fs": "0.0.1-security",

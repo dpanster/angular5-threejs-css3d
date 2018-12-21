@@ -5,14 +5,18 @@
       <h1>
         <b>A Three.js - CSS3d showcase with terrain and physics...</b>
       </h1>
+      <b>Note: This page is not responsive for mobile screens yet.</b><br>
       This canvas contains two scenes from
       <em>THREE.js</em> and two renderer elements, a
       <em>WebGLRenderer</em> and a
       <em>CSS3DRenderer</em>.
-      <br> The focus is the integration and handling on the CSS 3d in the scene. Features for this showcase are clickable, highlight,
+      <br> The focus is the integration and handling on the CSS 3d in the scene. Features for this showcase are
+      clickable, highlight,
       moveable css elements. One drop-down menu is integrated.
-      <br> Additionally the WebGL scene contains a random generated terrain, light, shadow, camera handling with mouse, physics
-      with collision detection, tween, object scaling, rotation around a (pivot-)point and a simple particle system. Play with the clickable elements and see whats happen.
+      <br> Additionally the WebGL scene contains a random generated terrain, light, shadow, camera handling with mouse,
+      physics
+      with collision detection, tween, object scaling, rotation around a (pivot-)point and a simple particle system.
+      Play with the clickable elements and see whats happen.
       <br>
       <br> A list of used libraries / packages for this angular controller example:
     </div>
@@ -33,6 +37,6 @@
   <!-- canvas here -->
   <!--<canvas class="w3-center" #canvasCSS3d (window:resize)="onResize($event)"></canvas>-->
   <div class="w3-container">
-      <div #canvasCSS3d (window:resize)="onResize()"></div>
+    <div #canvasCSS3d (window:resize)="onResize()"></div>
   </div>
 </div>
