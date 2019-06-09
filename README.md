@@ -14,11 +14,13 @@
     <a href="https://dpanster.github.io/angular5-threejs-css3d/img-gallery">
         <img src="/src/assets/screens/thumb_img_gallery_threejs.jpg" width="80" title="Image Gallery, Threejs + CSS3d">
     </a>
-* A small game included most features of the examples will be implemented... see
   
 --------------------
 # access to published page
 https://dpanster.github.io/angular5-threejs-css3d/
+
+# referenced from
+https://daniel-panster.com/comp-web3d
 
 ==================================================
 # Installed versions:
