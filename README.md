@@ -20,7 +20,7 @@
 https://dpanster.github.io/angular5-threejs-css3d/
 
 # referenced from
-https://daniel-panster.com/comp-web3d
+https://daniel-panster.com/#/comp-web3d
 
 ==================================================
 # Installed versions:
