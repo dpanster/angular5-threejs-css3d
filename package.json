@@ -38,7 +38,7 @@
     "glob": "^7.1.2",
     "perlin-noise": "0.0.1",
     "rxjs": "^5.5.6",
-    "three": "^0.91.0",
+    "three": "^0.137.0",
     "three-css3drenderer": "^1.0.1",
     "three-trackballcontrols": "0.0.7",
     "tween.js": "^16.6.0",
